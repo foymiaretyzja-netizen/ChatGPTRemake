@@ -25,7 +25,8 @@
             background-size: cover;
             background-position: center;
             z-index: 1;
-            transition: transform 0.1s ease-out; 
+            transition: transform 0.08s ease-out;
+            will-change: transform, opacity;
         }
 
         /* --- 2. Hover Task Tabs --- */
@@ -92,10 +93,42 @@
         .door-zone {
             position: absolute;
             top: 0;
-            width: 15vw; 
+            width: 15vw;
             height: 100vh;
             z-index: 20;
             cursor: pointer;
+            transition: background 0.18s ease;
+        }
+
+        .door-zone:hover {
+            background: linear-gradient(
+                to right,
+                rgba(0,0,0,.16),
+                transparent 70%
+            );
+        }
+
+        #right-door-zone:hover {
+            background: linear-gradient(
+                to left,
+                rgba(0,0,0,.16),
+                transparent 70%
+            );
+        }
+
+        /* Short cinematic blink when a door is operated. */
+        #door-transition {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .22s ease;
+        }
+
+        #door-transition.active {
+            opacity: .72;
         }
 
         #left-door-zone { left: 0; }
@@ -341,6 +374,7 @@
 
     <div id="left-shadow" class="door-shadow"></div>
     <div id="right-shadow" class="door-shadow"></div>
+    <div id="door-transition" aria-hidden="true"></div>
     <div id="left-door-zone" class="door-zone" onclick="toggleDoor('left')"></div>
     <div id="right-door-zone" class="door-zone" onclick="toggleDoor('right')"></div>
 
@@ -372,42 +406,109 @@
         const leftPanel = document.getElementById('left-panel');
         const rightPanel = document.getElementById('right-panel');
         
-        const maxPan = window.innerWidth * 0.5; 
-        
+        let maxPan = window.innerWidth * 0.5;
+        let panTarget = 0;
+        let panCurrent = 0;
+        let panFrame = null;
+        let panPointerX = window.innerWidth / 2;
+        let lastPanelSide = 'center';
+
+        const doorTransition = document.getElementById('door-transition');
+
+        function updatePanBounds() {
+            maxPan = window.innerWidth * 0.5;
+        }
+
+        function setPanTargetFromPointer(clientX) {
+            const width = Math.max(1, window.innerWidth);
+            const percentage = Math.max(0, Math.min(1, clientX / width));
+            panPointerX = clientX;
+            panTarget = -(percentage * maxPan);
+            return percentage;
+        }
+
+        function animatePan() {
+            panCurrent += (panTarget - panCurrent) * 0.16;
+
+            if (Math.abs(panTarget - panCurrent) < 0.05) {
+                panCurrent = panTarget;
+            }
+
+            panorama.style.transform = 'translate3d(' + panCurrent.toFixed(2) + 'px, 0, 0)';
+
+            if (Math.abs(panTarget - panCurrent) > 0.05) {
+                panFrame = requestAnimationFrame(animatePan);
+            } else {
+                panFrame = null;
+            }
+        }
+
+        function requestPanAnimation() {
+            if (!panFrame) panFrame = requestAnimationFrame(animatePan);
+        }
+
+        function updateDoorShadows(percentage) {
+            const leftAmount = window.leftDoorClosed
+                ? Math.max(0, 1 - (percentage / 0.3))
+                : 0;
+
+            const rightAmount = window.rightDoorClosed
+                ? Math.max(0, (percentage - 0.7) / 0.3)
+                : 0;
+
+            leftShadow.style.opacity = leftAmount.toFixed(3);
+            rightShadow.style.opacity = rightAmount.toFixed(3);
+        }
+
+        function pulseDoorTransition() {
+            if (!doorTransition) return;
+
+            doorTransition.classList.remove('active');
+            void doorTransition.offsetWidth;
+            doorTransition.classList.add('active');
+
+            window.setTimeout(() => {
+                doorTransition.classList.remove('active');
+            }, 180);
+        }
+
+        window.addEventListener('resize', () => {
+            updatePanBounds();
+            const percentage = setPanTargetFromPointer(panPointerX);
+            updateDoorShadows(percentage);
+            requestPanAnimation();
+        });
+
         // Globals for AI and Cameras
         window.leftDoorClosed = false;
         window.rightDoorClosed = false;
         window.isCameraOpen = false;
         window.aiPositions = { charrlie: 'Guest Room', elong: 'Storage' };
 
-        // Panning Logic (Updated with Task System checks)
+        // Smooth panning and stable panel logic.
         document.addEventListener('mousemove', (e) => {
-            if (window.isCameraOpen || window.isTaskActive) return; 
+            if (window.isCameraOpen) return;
 
-            const mouseX = e.clientX;
-            const screenWidth = window.innerWidth;
-            const percentage = mouseX / screenWidth; 
-            
-            const panAmount = -(percentage * maxPan);
-            panorama.style.transform = `translateX(${panAmount}px)`;
+            const percentage = setPanTargetFromPointer(e.clientX);
+            requestPanAnimation();
 
-            // Left Panel (Tasks) Logic
-            if (percentage < 0.35) {
-                leftPanel.classList.add('is-visible');
-            } else {
-                leftPanel.classList.remove('is-visible');
-                // If they pan away, cancel the task!
-                if (window.isTaskActive && window.cancelCurrentTask) {
-                    window.cancelCurrentTask();
+            if (!window.isTaskActive) {
+                if (percentage < 0.35) {
+                    leftPanel.classList.add('is-visible');
+                    lastPanelSide = 'left';
+                } else {
+                    leftPanel.classList.remove('is-visible');
+                }
+
+                if (percentage > 0.65) {
+                    rightPanel.classList.add('is-visible');
+                    lastPanelSide = 'right';
+                } else {
+                    rightPanel.classList.remove('is-visible');
                 }
             }
 
-            // Right Panel (System) Logic
-            if (percentage > 0.65) rightPanel.classList.add('is-visible');
-            else rightPanel.classList.remove('is-visible');
-
-            if (window.leftDoorClosed) leftShadow.style.opacity = Math.max(0, 1 - (percentage / 0.3)); 
-            if (window.rightDoorClosed) rightShadow.style.opacity = Math.max(0, (percentage - 0.7) / 0.3);
+            updateDoorShadows(percentage);
         });
 
         // Door Audio
@@ -427,18 +528,27 @@
         }
 
         window.toggleDoor = function(side) {
-            if (window.isCameraOpen) return; 
+            if (window.isCameraOpen || window.isBlackout) return;
 
             if (side === 'left') {
                 window.leftDoorClosed = !window.leftDoorClosed;
                 playRandomSound(window.leftDoorClosed ? closeSounds : openSounds);
-                if (!window.leftDoorClosed) leftShadow.style.opacity = 0;
             } else if (side === 'right') {
                 window.rightDoorClosed = !window.rightDoorClosed;
                 playRandomSound(window.rightDoorClosed ? closeSounds : openSounds);
-                if (!window.rightDoorClosed) rightShadow.style.opacity = 0;
+            } else {
+                return;
             }
+
+            // Recalculate immediately so the visual state never lags one frame.
+            const percentage = panPointerX / Math.max(1, window.innerWidth);
+            updateDoorShadows(percentage);
+            pulseDoorTransition();
         };
+
+        // Start the pan loop only when needed.
+        setPanTargetFromPointer(window.innerWidth / 2);
+        requestPanAnimation();
     </script>
 
     <script src="../night1-sys/power.js"></script>
