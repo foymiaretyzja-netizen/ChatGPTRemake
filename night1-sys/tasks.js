@@ -347,17 +347,11 @@ let activeTaskAnimation = null;
             transition: width .08s steps(2, end);
         }
 
-        body.task-screen-shake {
-            animation: wholeScreenShake .11s steps(2, end) infinite;
-        }
-
-        @keyframes wholeScreenShake {
-            0%   { transform: translate(0, 0) rotate(0deg); }
-            20%  { transform: translate(-4px, 2px) rotate(-.12deg); }
-            40%  { transform: translate(4px, -2px) rotate(.12deg); }
-            60%  { transform: translate(-3px, -1px) rotate(.08deg); }
-            80%  { transform: translate(3px, 2px) rotate(-.08deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
+        /* Missile shake is applied to the game world only.
+           The task panels and power HUD deliberately stay locked in place. */
+        .missile-shake-target {
+            translate: var(--missile-shake-x, 0px) var(--missile-shake-y, 0px);
+            will-change: translate;
         }
 
         #missile-event {
@@ -375,31 +369,10 @@ let activeTaskAnimation = null;
             opacity: 1;
         }
 
-        #missile-event-text {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) scale(.94);
-            color: #ffb000;
-            text-shadow: 0 0 16px #ff5500;
-            font: 700 clamp(22px, 5vw, 54px)/1 "DM Mono", monospace;
-            letter-spacing: .08em;
-            opacity: 0;
-            transition: opacity .25s ease, transform .25s ease;
-        }
-
-        #missile-event.visible #missile-event-text {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
         @media (prefers-reduced-motion: reduce) {
             .task-panel::before,
             .task-action.task-running,
             .task-spinner,
-            body.task-screen-shake {
-                animation: none !important;
-            }
         }
     `;
     document.head.appendChild(style);
@@ -421,7 +394,6 @@ let activeTaskAnimation = null;
 
     const missileEvent = document.createElement('div');
     missileEvent.id = 'missile-event';
-    missileEvent.innerHTML = '<div id="missile-event-text">MISSILE AWAY</div>';
     document.body.appendChild(missileEvent);
 
     enhanceButton(btnDeport, 'DEP-9000');
@@ -819,16 +791,64 @@ function finishMissile() {
 function playMissileImpact() {
     const event = document.getElementById('missile-event');
 
-    document.body.classList.add('task-screen-shake');
-    if (event) event.classList.add('visible');
+    // Shake only actual gameplay layers. HUD/task panels are intentionally excluded.
+    const targets = document.querySelectorAll(
+        '#office-panorama, .door-zone, .door-shadow, #camera-btn, #camera-monitor'
+    );
 
-    showTaskToast('MISSILE AWAY. PLEASE HOLD ONTO YOUR DESK.', 1800);
+    targets.forEach(target => {
+        target.classList.add('missile-shake-target');
+    });
 
-    // Shake for exactly 3 seconds.
-    setTimeout(() => {
-        document.body.classList.remove('task-screen-shake');
+    if (event) {
+        event.classList.add('visible');
+        event.style.opacity = '0.5';
+    }
 
-        // Fade the event away instead of snapping it off.
+    showTaskToast('MISSILE LAUNCH CONFIRMED.', 1200);
+
+    const duration = 3000;
+    const started = performance.now();
+    let lastJolt = 0;
+    let rafId = null;
+
+    function shakeFrame(now) {
+        const elapsed = now - started;
+        const progress = Math.min(1, elapsed / duration);
+
+        // Strong at launch, then smoothly fades toward zero.
+        const decay = Math.pow(1 - progress, 1.8);
+        const amplitude = 7 * decay;
+
+        // Hold each random jolt briefly so it feels like physical shaking,
+        // rather than turning into a blur of single-frame noise.
+        if (now - lastJolt >= 42 || progress >= 1) {
+            const x = (Math.random() * 2 - 1) * amplitude;
+            const y = (Math.random() * 2 - 1) * amplitude * 0.7;
+
+            targets.forEach(target => {
+                target.style.setProperty('--missile-shake-x', x.toFixed(2) + 'px');
+                target.style.setProperty('--missile-shake-y', y.toFixed(2) + 'px');
+            });
+
+            if (event) {
+                event.style.opacity = String(0.5 * decay);
+            }
+
+            lastJolt = now;
+        }
+
+        if (progress < 1) {
+            rafId = requestAnimationFrame(shakeFrame);
+            return;
+        }
+
+        targets.forEach(target => {
+            target.style.setProperty('--missile-shake-x', '0px');
+            target.style.setProperty('--missile-shake-y', '0px');
+            target.classList.remove('missile-shake-target');
+        });
+
         if (event) {
             event.style.opacity = '0';
 
@@ -838,9 +858,13 @@ function playMissileImpact() {
             }, 450);
         }
 
+        if (rafId) cancelAnimationFrame(rafId);
+
         // Only check the win after the launch sequence has calmed down.
         checkWinCondition();
-    }, 3000);
+    }
+
+    rafId = requestAnimationFrame(shakeFrame);
 }
 
 // ============================================================
