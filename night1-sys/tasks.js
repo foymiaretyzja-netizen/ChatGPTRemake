@@ -694,8 +694,7 @@ function isMotionNearDoor(side) {
 
     const rightThreatRooms = new Set([
         'Presidential Right Door',
-        'Conference Room',
-        'Storage'
+        'Conference Room'
     ]);
 
     const targetRooms = side === 'left' ? leftThreatRooms : rightThreatRooms;
