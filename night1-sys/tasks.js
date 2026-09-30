@@ -44,8 +44,22 @@ let activeTaskAnimation = null;
     const style = document.createElement('style');
     style.textContent = `
         .task-panel {
-            position: relative;
-            overflow: hidden;
+            position: absolute !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #555 #111;
+            transform: translateY(150%);
+        }
+
+        /* Keep the task tabs anchored to the bottom instead of letting
+           injected UI content change their position. */
+        .task-panel.is-visible {
+            transform: translateY(0) !important;
+        }
+
+        .task-panel.is-visible:hover {
+            transform: translateY(0) !important;
         }
 
         .task-panel::before {
