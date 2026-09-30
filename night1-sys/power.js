@@ -14,6 +14,7 @@ let lightTransitionTimer = null;
 let power = 100.0;
 let isBlackout = false;
 let lightsOn = true;
+window.isBlackout = false;
 
 // 100% / 300 seconds = 0.33%/sec base.
 // Tuned so BOTH doors closed + lights on = 0.50%/sec,
@@ -209,6 +210,7 @@ setInterval(() => {
 // Blackout State
 function triggerBlackout() {
     isBlackout = true;
+    window.isBlackout = true;
     lightsOn = false;
 
     // Hard cut on true blackout. No 0.5s fade here.
