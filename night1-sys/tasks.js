@@ -62,6 +62,208 @@ let activeTaskAnimation = null;
             transform: translateY(0) !important;
         }
 
+        .power-panel {
+            padding: 18px !important;
+        }
+
+        .power-panel-head {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .power-panel .tab-label {
+            margin: 0 0 4px !important;
+            text-align: left;
+            font-size: 1.05rem;
+        }
+
+        .power-subtitle {
+            color: #69756f;
+            font: 9px/1.2 "DM Mono", monospace;
+            letter-spacing: .12em;
+        }
+
+        .power-badge {
+            color: #7dffbe;
+            border-color: rgba(125,255,190,.45);
+        }
+
+        .power-section {
+            position: relative;
+            z-index: 3;
+        }
+
+        .power-section-label {
+            color: #738078;
+            font: 9px/1.2 "DM Mono", monospace;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .power-section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .sensor-idle,
+        .sensor-scanning,
+        .sensor-result {
+            color: #777;
+            font: 8px/1.2 "DM Mono", monospace;
+            letter-spacing: .08em;
+        }
+
+        .sensor-scanning {
+            color: #ffaa00;
+            animation: sensorBlink .7s steps(2, end) infinite;
+        }
+
+        .sensor-result {
+            color: #7dffbe;
+        }
+
+        @keyframes sensorBlink {
+            50% { opacity: .35; }
+        }
+
+        .power-light-button {
+            margin-top: 7px;
+        }
+
+        .power-divider {
+            position: relative;
+            z-index: 3;
+            height: 1px;
+            margin: 13px 0;
+            background: linear-gradient(90deg, transparent, #343b37 18%, #343b37 82%, transparent);
+        }
+
+        .motion-console {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(120px, 1.15fr);
+            gap: 9px;
+            align-items: stretch;
+        }
+
+        .motion-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+        }
+
+        .scan-button {
+            min-height: 39px !important;
+            padding: 8px 6px !important;
+            text-align: center !important;
+            color: #aab5af !important;
+            border-color: #3b4741 !important;
+        }
+
+        .scan-button:hover:not(:disabled) {
+            color: #e8f1ec !important;
+            border-color: #718279 !important;
+            background: #151b18 !important;
+        }
+
+        .scan-button.scanning {
+            color: #ffaa00 !important;
+            border-color: #ffaa00 !important;
+            box-shadow: 0 0 12px rgba(255,170,0,.12);
+            animation: scanPulse .8s ease-in-out infinite;
+        }
+
+        .scan-button:disabled {
+            opacity: .65;
+            cursor: wait;
+        }
+
+        @keyframes scanPulse {
+            50% { box-shadow: 0 0 18px rgba(255,170,0,.22); }
+        }
+
+        .motion-result {
+            position: relative;
+            min-width: 0;
+            padding: 7px;
+            border: 1px solid #303934;
+            background: rgba(0,0,0,.34);
+        }
+
+        .motion-bar {
+            position: relative;
+            height: 100%;
+            min-height: 39px;
+            overflow: hidden;
+            border: 1px solid #222a26;
+            background: #090c0a;
+        }
+
+        .motion-bar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255,255,255,.035) 0 1px,
+                transparent 1px 9px
+            );
+            pointer-events: none;
+        }
+
+        .motion-progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0%;
+            background: linear-gradient(90deg, #44534b, #7dffbe);
+            box-shadow: 0 0 14px rgba(125,255,190,.18);
+            transition: width .12s steps(3, end), background .2s ease;
+        }
+
+        .motion-progress-fill.detected {
+            background: linear-gradient(90deg, #8b5b18, #ffaa00);
+            box-shadow: 0 0 14px rgba(255,170,0,.2);
+        }
+
+        .motion-result-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            padding: 0 4px;
+            text-align: center;
+            color: #5d6862;
+            font: 700 9px/1.1 "DM Mono", monospace;
+            letter-spacing: .08em;
+            pointer-events: none;
+        }
+
+        .motion-result-text.complete {
+            color: #dce8e1;
+            text-shadow: 0 0 8px rgba(220,232,225,.2);
+        }
+
+        .motion-result-text.detected {
+            color: #fff0c7;
+            text-shadow: 0 0 9px rgba(255,170,0,.3);
+        }
+
+        @media (max-width: 700px) {
+            .motion-console {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .task-panel::before {
             content: "";
             position: absolute;
@@ -402,6 +604,8 @@ let activeTaskAnimation = null;
     createStatusBox(btnDeport, 'deport');
     createStatusBox(btnMissile, 'missile');
 
+    setupMotionScanner();
+
     // A tiny bit of unnecessary government-computer labeling.
     const labels = document.querySelectorAll('.task-panel .tab-label');
     labels.forEach(label => {
@@ -452,6 +656,130 @@ function createStatusBox(button, type) {
     button.parentElement.insertBefore(box, button);
     button.parentElement.insertBefore(progress, button);
     button.parentElement.insertBefore(mini, button);
+}
+
+// ============================================================
+// MOTION SENSOR
+// ============================================================
+
+let motionScanActive = false;
+let motionScanAnimation = null;
+
+function setupMotionScanner() {
+    const left = document.getElementById('btn-scan-left');
+    const right = document.getElementById('btn-scan-right');
+
+    if (!left || !right) return;
+
+    left.addEventListener('click', () => runMotionScan('left'));
+    right.addEventListener('click', () => runMotionScan('right'));
+}
+
+function setMotionButtonsDisabled(disabled) {
+    const left = document.getElementById('btn-scan-left');
+    const right = document.getElementById('btn-scan-right');
+
+    if (left) left.disabled = disabled;
+    if (right) right.disabled = disabled;
+}
+
+function isMotionNearDoor(side) {
+    const positions = window.aiPositions || {};
+
+    const leftThreatRooms = new Set([
+        'Presidential Left Door',
+        'Janitor Room',
+        'Diner'
+    ]);
+
+    const rightThreatRooms = new Set([
+        'Presidential Right Door',
+        'Conference Room',
+        'Storage'
+    ]);
+
+    const targetRooms = side === 'left' ? leftThreatRooms : rightThreatRooms;
+    const trackedPosition = side === 'left'
+        ? positions.charrlie
+        : positions.elong;
+
+    return Boolean(trackedPosition && targetRooms.has(trackedPosition));
+}
+
+function runMotionScan(side) {
+    if (motionScanActive || (typeof isBlackout !== 'undefined' && isBlackout)) return;
+
+    const left = document.getElementById('btn-scan-left');
+    const right = document.getElementById('btn-scan-right');
+    const fill = document.getElementById('motion-progress');
+    const result = document.getElementById('motion-result-text');
+    const status = document.getElementById('sensor-status');
+
+    if (!fill || !result || !status) return;
+
+    motionScanActive = true;
+    setMotionButtonsDisabled(true);
+
+    [left, right].forEach(button => {
+        if (button) button.classList.remove('scanning');
+    });
+
+    const activeButton = side === 'left' ? left : right;
+    if (activeButton) activeButton.classList.add('scanning');
+
+    fill.classList.remove('detected');
+    fill.style.width = '0%';
+    result.className = 'motion-result-text';
+    result.textContent = 'SCANNING...';
+    status.className = 'sensor-scanning';
+    status.textContent = side.toUpperCase() + ' SCAN // ACTIVE';
+
+    const started = performance.now();
+    const duration = 2600;
+    let displayed = 0;
+    let nextJitter = 0;
+
+    function tick(now) {
+        const progress = Math.min(1, (now - started) / duration);
+
+        if (now >= nextJitter) {
+            const target = progress * 100;
+
+            if (Math.random() < 0.18) {
+                displayed = Math.max(displayed, target - (3 + Math.random() * 8));
+            } else {
+                displayed = Math.min(target, displayed + 2 + Math.random() * 7);
+            }
+
+            fill.style.width = Math.min(100, displayed).toFixed(1) + '%';
+            nextJitter = now + 80 + Math.random() * 170;
+        }
+
+        if (progress < 1) {
+            motionScanAnimation = requestAnimationFrame(tick);
+            return;
+        }
+
+        fill.style.width = '100%';
+
+        const detected = isMotionNearDoor(side);
+        result.textContent = detected ? 'MOTION DETECTED' : 'NO MOTION';
+        result.className = 'motion-result-text complete' + (detected ? ' detected' : '');
+        fill.classList.toggle('detected', detected);
+
+        status.className = detected ? 'sensor-scanning' : 'sensor-result';
+        status.textContent = detected
+            ? side.toUpperCase() + ' // CONTACT'
+            : side.toUpperCase() + ' // CLEAR';
+
+        if (activeButton) activeButton.classList.remove('scanning');
+
+        motionScanActive = false;
+        motionScanAnimation = null;
+        setMotionButtonsDisabled(false);
+    }
+
+    motionScanAnimation = requestAnimationFrame(tick);
 }
 
 // ============================================================
