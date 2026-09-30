@@ -302,20 +302,40 @@
         </div>
     </div>
 
-    <div id="right-panel" class="task-panel">
-        <div class="tab-label">SYS-PWR</div>
-        <h2 style="color: #00ff00; margin-bottom: 10px; font-size: 1.3rem;">Power & Sensors</h2>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button id="btn-lights" class="sys-btn" style="border-color: #ffbb00; color: #ffbb00;">Turn Off Lights</button>
-            
-            <hr style="border: 1px solid #333; margin: 5px 0;">
-            
-            <div style="color: #00ff00; font-size: 0.9rem; text-align: center;">MOTION SENSOR</div>
-            <div class="btn-row">
-                <button id="btn-scan-left" class="sys-btn">Scan Left Door</button>
-                <button id="btn-scan-right" class="sys-btn">Scan Right Door</button>
+    <div id="right-panel" class="task-panel power-panel">
+        <div class="power-panel-head">
+            <div>
+                <div class="tab-label">SYS-PWR</div>
+                <div class="power-subtitle">POWER & SENSOR ARRAY</div>
             </div>
-            <div id="sensor-status" style="color: #aaa; font-size: 0.8rem; text-align: center; margin-top: 5px;">Awaiting Scan...</div>
+            <div class="task-badge power-badge">PWR-01</div>
+        </div>
+
+        <div class="power-section">
+            <div class="power-section-label">LIGHTING CONTROL</div>
+            <button id="btn-lights" class="sys-btn power-light-button" style="border-color: #ffbb00; color: #ffbb00;">Turn Off Lights</button>
+        </div>
+
+        <div class="power-divider"></div>
+
+        <div class="power-section">
+            <div class="power-section-head">
+                <span class="power-section-label">MOTION SENSOR</span>
+                <span id="sensor-status" class="sensor-idle">STANDBY</span>
+            </div>
+
+            <div class="motion-console">
+                <div class="motion-buttons">
+                    <button id="btn-scan-left" class="sys-btn scan-button">Left</button>
+                    <button id="btn-scan-right" class="sys-btn scan-button">Right</button>
+                </div>
+                <div class="motion-result">
+                    <div class="motion-bar">
+                        <div id="motion-progress" class="motion-progress-fill"></div>
+                    </div>
+                    <div id="motion-result-text" class="motion-result-text">SCAN READY</div>
+                </div>
+            </div>
         </div>
     </div>
 
