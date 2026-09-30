@@ -7,6 +7,10 @@ const powerDisplay = document.getElementById('power-display');
 const panoramaBg = document.getElementById('office-panorama');
 const btnLights = document.getElementById('btn-lights');
 
+// The office image crossfades when the player toggles the lights.
+// Blackout remains an immediate hard cut so a total power failure feels abrupt.
+let lightTransitionTimer = null;
+
 let power = 100.0;
 let isBlackout = false;
 let lightsOn = true;
@@ -147,13 +151,27 @@ btnLights.addEventListener('click', () => {
 
     lightsOn = !lightsOn;
 
+    // Fade the normal office image out, swap the sprite, then fade it back in.
+    // This is deliberately separate from blackout, which is always an instant cut.
+    clearTimeout(lightTransitionTimer);
+    panoramaBg.style.transition = 'opacity 0.5s ease';
+    panoramaBg.style.opacity = '0';
+
+    lightTransitionTimer = setTimeout(() => {
+        panoramaBg.style.backgroundImage = lightsOn
+            ? "url('../Scenes/Presidential-room.jpg')"
+            : "url('../Scenes/Presidential-room-blackout.jpg')";
+
+        requestAnimationFrame(() => {
+            if (!isBlackout) panoramaBg.style.opacity = '1';
+        });
+    }, 500);
+
     if (lightsOn) {
-        panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room.jpg')";
         btnLights.innerText = "Turn Off Lights";
         btnLights.style.borderColor = "#ffbb00";
         btnLights.style.color = "#ffbb00";
     } else {
-        panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
         btnLights.innerText = "Turn On Lights";
         btnLights.style.borderColor = "#555";
         btnLights.style.color = "#aaa";
@@ -193,6 +211,10 @@ function triggerBlackout() {
     isBlackout = true;
     lightsOn = false;
 
+    // Hard cut on true blackout. No 0.5s fade here.
+    clearTimeout(lightTransitionTimer);
+    panoramaBg.style.transition = 'none';
+    panoramaBg.style.opacity = '1';
     panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
 
     power = 0;
