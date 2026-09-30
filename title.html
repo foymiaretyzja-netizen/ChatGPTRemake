@@ -4,137 +4,231 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Title Screen - Five Nights at the Black House</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
-        /* CSS Reset & Basic Setup */
+        :root {
+            --white: #f2f2f0;
+            --muted: #a6a6a1;
+            --dim: #555650;
+            --red: #c73737;
+            --red-bright: #ff5757;
+            --panel: rgba(5, 5, 5, 0.52);
+            --ease: cubic-bezier(.2,.8,.2,1);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background-color: #000; 
-            color: #fff; 
-            font-family: 'Courier New', Courier, monospace; 
-            overflow: hidden; 
-            user-select: none; 
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
         }
 
-        /* --- Start Screen --- */
-        #start-screen {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            cursor: pointer;
-            transition: opacity 1s ease-in-out;
-        }
-
-        #start-text {
-            font-size: 1.5rem;
-            color: #aaa;
-            animation: slowPulse 2s infinite;
+        body {
+            color: var(--white);
+            font-family: "Barlow Condensed", Arial, sans-serif;
             user-select: none;
         }
 
-        @keyframes slowPulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+        button {
+            font: inherit;
+            color: inherit;
         }
 
-        /* Background Effects */
+        /* Background */
         #bg-container {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url('StoryScenes/JiuN7.jpg'); 
-            background-size: cover;
-            background-position: center;
-            opacity: 0; 
-            animation: fadeIn 3s forwards, glitchFlicker 5s infinite, jitter 8s infinite;
+            position: fixed;
+            inset: -3%;
+            background: url("StoryScenes/JiuN7.jpg") center / cover no-repeat;
+            opacity: 0;
+            transform: scale(1.045);
+            filter: brightness(.48) contrast(1.12) saturate(.72);
             z-index: 1;
+            animation: bgReveal 2.2s var(--ease) forwards, bgDrift 18s ease-in-out infinite alternate;
+            will-change: transform, filter, opacity;
         }
 
+        #bg-vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 48% 48%, transparent 22%, rgba(0,0,0,.35) 68%, rgba(0,0,0,.88) 100%),
+                linear-gradient(90deg, rgba(0,0,0,.76), rgba(0,0,0,.10) 48%, rgba(0,0,0,.58));
+        }
+
+        #red-glow {
+            position: fixed;
+            width: 38vw;
+            height: 38vw;
+            min-width: 280px;
+            min-height: 280px;
+            left: -18vw;
+            bottom: -24vw;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(190,35,35,.17), transparent 68%);
+            filter: blur(20px);
+            animation: redBreathe 7s ease-in-out infinite;
+        }
+
+        /* Controlled CRT layer */
         #static-noise {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            opacity: 0.15; 
-            pointer-events: none; 
+            position: fixed;
+            inset: 0;
             z-index: 10;
-            animation: fuzzShift 0.2s infinite linear;
+            pointer-events: none;
+            opacity: .055;
+            mix-blend-mode: screen;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: fuzzShift .28s steps(2) infinite;
         }
 
         #scanlines {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(
-                to bottom,
-                rgba(255,255,255,0),
-                rgba(255,255,255,0) 50%,
-                rgba(0,0,0,0.2) 50%,
-                rgba(0,0,0,0.2)
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
+            position: fixed;
+            inset: 0;
             z-index: 11;
+            pointer-events: none;
+            opacity: .12;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(255,255,255,.035) 0,
+                rgba(255,255,255,.035) 1px,
+                transparent 1px,
+                transparent 5px
+            );
         }
 
         #tracking-line {
-            position: absolute;
-            top: -10%; left: 0; width: 100vw; height: 20px;
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-            pointer-events: none;
+            position: fixed;
+            left: 0;
+            top: -12%;
+            width: 100%;
+            height: 8vh;
             z-index: 12;
-            animation: rollDown 6s linear infinite;
+            pointer-events: none;
+            opacity: .12;
+            background: linear-gradient(transparent, rgba(255,255,255,.08), transparent);
+            filter: blur(2px);
+            animation: rollDown 9s linear infinite;
         }
 
-        /* --- Animations --- */
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes glitchFlicker {
-            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-            20%, 24%, 55% { opacity: 0.6; }
-            22% { opacity: 0.2; }
-            80% { opacity: 0.8; }
-            81% { opacity: 0.3; }
-            82% { opacity: 1; }
-        }
-        @keyframes jitter {
-            0%, 96% { transform: translate(0, 0); }
-            97% { transform: translate(-2px, 1px); }
-            98% { transform: translate(2px, -2px); }
-            99% { transform: translate(-1px, 2px); }
-            100% { transform: translate(0, 0); }
-        }
-        @keyframes fuzzShift {
-            0% { background-position: 0 0; }
-            100% { background-position: 100% 100%; }
-        }
-        @keyframes rollDown {
-            0% { top: -10%; }
-            100% { top: 110%; }
+        /* Start screen */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            background: #000;
+            transition: opacity 1.1s var(--ease);
         }
 
-        /* --- UI Elements --- */
-        #ui-layer {
+        #start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #start-card {
+            text-align: center;
+        }
+
+        #start-mark {
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 24px;
+            border: 1px solid rgba(255,255,255,.35);
+            border-radius: 50%;
+            position: relative;
+            animation: startPulse 2.4s ease-in-out infinite;
+        }
+
+        #start-mark::after {
+            content: "";
             position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            inset: 11px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 25px rgba(199,55,55,.45);
+        }
+
+        #start-text {
+            color: #bdbdb8;
+            font-family: "DM Mono", monospace;
+            font-size: .76rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            animation: slowPulse 2.2s ease-in-out infinite;
+        }
+
+        /* UI */
+        #ui-layer {
+            position: fixed;
+            inset: 0;
             z-index: 20;
-            padding: 50px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start; 
+            justify-content: center;
+            align-items: flex-start;
+            padding: clamp(30px, 6vw, 92px);
+            opacity: 0;
+            transform: translateY(12px);
+            animation: uiReveal 1.2s 1s var(--ease) forwards;
+        }
+
+        .eyebrow {
+            margin-bottom: 10px;
+            color: var(--red-bright);
+            font-family: "DM Mono", monospace;
+            font-size: .67rem;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            opacity: .9;
         }
 
         h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
-            text-shadow: 3px 3px 6px #000, 0 0 15px rgba(255, 255, 255, 0.3);
-            margin-bottom: 60px;
-            max-width: 600px;
+            max-width: 760px;
+            margin-bottom: 46px;
+            font-size: clamp(4rem, 8vw, 7.8rem);
+            line-height: .78;
+            font-weight: 600;
+            letter-spacing: -.035em;
+            text-transform: uppercase;
+            text-shadow: 0 3px 20px rgba(0,0,0,.9);
         }
 
-        /* Button Wrappers for toggling menus */
+        h1 span {
+            display: block;
+        }
+
+        h1 .accent {
+            color: #c9c9c4;
+            font-weight: 400;
+        }
+
+        #menu-frame {
+            position: relative;
+            padding-left: 18px;
+        }
+
+        #menu-frame::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(var(--red), rgba(199,55,55,.08));
+            box-shadow: 0 0 12px rgba(199,55,55,.25);
+        }
+
         #main-menu-buttons, #night-selection-menu {
             display: flex;
             flex-direction: column;
@@ -142,48 +236,222 @@
         }
 
         #night-selection-menu {
-            display: none; /* Hidden by default */
+            display: none;
         }
 
-        h2.menu-subtitle {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px #000;
+        #night-selection-menu.entering {
+            animation: menuIn .42s var(--ease) both;
+        }
+
+        #night-selection-menu.leaving {
+            animation: menuOut .28s ease both;
+        }
+
+        .menu-label {
+            margin-bottom: 13px;
+            color: #888983;
+            font-family: "DM Mono", monospace;
+            font-size: .65rem;
+            letter-spacing: .22em;
+            text-transform: uppercase;
         }
 
         .menu-btn {
-            display: block;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 235px;
+            padding: 8px 16px 8px 0;
+            margin: 1px 0;
+            border: 0;
+            outline: 0;
             background: transparent;
-            color: #fff;
-            border: none;
-            font-size: 2rem;
-            font-family: inherit;
-            margin-bottom: 25px;
+            color: #deded9;
             cursor: pointer;
-            transition: color 0.2s, text-shadow 0.2s, padding-left 0.2s;
-            text-shadow: 2px 2px 4px #000;
+            font-size: clamp(1.35rem, 2.1vw, 1.85rem);
+            font-weight: 500;
+            letter-spacing: .015em;
+            text-align: left;
+            transition:
+                color .22s ease,
+                transform .28s var(--ease),
+                opacity .22s ease,
+                text-shadow .22s ease;
+        }
+
+        .menu-btn::before {
+            content: "";
+            width: 0;
+            height: 1px;
+            flex: 0 0 0;
+            background: var(--red-bright);
+            box-shadow: 0 0 10px rgba(255,87,87,.55);
+            transition: width .28s var(--ease), flex-basis .28s var(--ease);
+        }
+
+        .menu-btn::after {
+            content: "↗";
+            margin-left: auto;
+            color: var(--dim);
+            font-family: "DM Mono", monospace;
+            font-size: .7rem;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: opacity .2s ease, transform .25s var(--ease), color .2s ease;
         }
 
         .menu-btn:hover {
-            color: #ccc;
-            text-shadow: 0 0 15px #fff;
-            padding-left: 10px; 
+            color: #fff;
+            transform: translateX(7px);
+            text-shadow: 0 0 18px rgba(255,255,255,.17);
         }
 
-        /* Disabled Button Style for Locked Nights */
+        .menu-btn:hover::before {
+            width: 24px;
+            flex-basis: 24px;
+        }
+
+        .menu-btn:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+            color: #aaa;
+        }
+
+        .menu-btn:active {
+            transform: translateX(12px) scale(.97);
+            color: var(--red-bright);
+        }
+
         .menu-btn.disabled {
-            color: #444;
-            text-shadow: none;
+            color: #44453f;
+            cursor: not-allowed;
             pointer-events: none;
         }
 
+        .menu-btn.disabled::after {
+            content: "LOCKED";
+            opacity: .55;
+            transform: none;
+            font-size: .56rem;
+        }
+
+        .menu-btn.back-btn {
+            margin-top: 18px;
+            color: #9a4b4b;
+            font-family: "DM Mono", monospace;
+            font-size: .78rem;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        .menu-btn.back-btn:hover {
+            color: var(--red-bright);
+        }
+
         #credits-display {
-            margin-top: auto; 
-            font-size: 1.2rem;
+            position: fixed;
+            left: clamp(30px, 6vw, 92px);
+            bottom: 34px;
+            max-width: min(620px, 80vw);
+            padding: 12px 15px;
+            border-left: 1px solid rgba(255,255,255,.18);
+            background: rgba(0,0,0,.25);
             color: #aaa;
-            opacity: 0; 
-            transition: opacity 0.5s ease-in-out;
-            text-shadow: 1px 1px 2px #000;
+            font-family: "DM Mono", monospace;
+            font-size: .69rem;
+            letter-spacing: .035em;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: opacity .35s ease, transform .35s var(--ease);
+            text-shadow: 0 2px 8px #000;
+        }
+
+        #credits-display.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #status-line {
+            position: fixed;
+            right: 32px;
+            bottom: 28px;
+            z-index: 25;
+            color: #777872;
+            font-family: "DM Mono", monospace;
+            font-size: .57rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            opacity: .7;
+        }
+
+        /* Animations */
+        @keyframes bgReveal { to { opacity: 1; } }
+        @keyframes bgDrift {
+            from { transform: scale(1.045) translate3d(-.4%, -.2%, 0); }
+            to { transform: scale(1.09) translate3d(.5%, .4%, 0); }
+        }
+        @keyframes redBreathe {
+            0%,100% { opacity: .45; transform: scale(.9); }
+            50% { opacity: .85; transform: scale(1.08); }
+        }
+        @keyframes uiReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes menuIn {
+            from { opacity: 0; transform: translateX(-16px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes menuOut {
+            to { opacity: 0; transform: translateX(-12px); }
+        }
+        @keyframes slowPulse {
+            0%,100% { opacity: .35; }
+            50% { opacity: 1; }
+        }
+        @keyframes startPulse {
+            0%,100% { transform: scale(.96); box-shadow: 0 0 0 rgba(255,255,255,0); }
+            50% { transform: scale(1); box-shadow: 0 0 28px rgba(255,255,255,.07); }
+        }
+        @keyframes fuzzShift {
+            from { background-position: 0 0; }
+            to { background-position: 100% 100%; }
+        }
+        @keyframes rollDown {
+            from { top: -12%; }
+            to { top: 112%; }
+        }
+
+        @media (max-width: 700px) {
+            #ui-layer {
+                padding: 30px;
+                justify-content: flex-end;
+                padding-bottom: 105px;
+            }
+
+            h1 {
+                font-size: clamp(3.3rem, 15vw, 5rem);
+                margin-bottom: 32px;
+            }
+
+            .menu-btn {
+                min-width: 205px;
+                font-size: 1.5rem;
+            }
+
+            #status-line { display: none; }
+            #credits-display { left: 30px; bottom: 24px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
         }
     </style>
 </head>
@@ -192,122 +460,178 @@
     <audio id="bg-music" src="Sounds/universfield-horror-background-atmosphere-156462.mp3" loop></audio>
 
     <div id="start-screen">
-        <div id="start-text">[Click anywhere to start]</div>
+        <div id="start-card">
+            <div id="start-mark"></div>
+            <div id="start-text">Click anywhere to start</div>
+        </div>
     </div>
 
     <div id="bg-container"></div>
+    <div id="red-glow"></div>
+    <div id="bg-vignette"></div>
     <div id="static-noise"></div>
     <div id="scanlines"></div>
     <div id="tracking-line"></div>
 
-    <div id="ui-layer">
-        <h1>Five Nights<br>at the Black House</h1>
-        
-        <div id="main-menu-buttons">
-            <button class="menu-btn" onclick="toggleNightSelection(true)">Play</button>
-            <button class="menu-btn" onclick="exportSaveFile()">Save Data</button>
-            <button class="menu-btn" onclick="triggerImport()">Import Data</button>
-            <button class="menu-btn" onclick="toggleCredits()">Credits</button>
-        </div>
+    <main id="ui-layer">
+        <div class="eyebrow">Black House // Main Menu</div>
 
-        <div id="night-selection-menu">
-            <h2 class="menu-subtitle">Select Night</h2>
-            <button class="menu-btn" id="btn-night1" onclick="startNight(1)">Night 1</button>
-            <button class="menu-btn" id="btn-night2" onclick="startNight(2)">Night 2</button>
-            <button class="menu-btn" id="btn-night3" onclick="startNight(3)">Night 3</button>
-            <button class="menu-btn" id="btn-night4" onclick="startNight(4)">Night 4</button>
-            <button class="menu-btn" id="btn-night5" onclick="startNight(5)">Night 5</button>
-            <button class="menu-btn" onclick="toggleNightSelection(false)" style="margin-top: 20px; color: #ff5555;">[ Back ]</button>
-        </div>
+        <h1>
+            <span>Five Nights</span>
+            <span class="accent">at the Black House</span>
+        </h1>
 
-        <div id="credits-display">
-            Directed by Solan; made by Gemini and grok.
+        <div id="menu-frame">
+            <div id="main-menu-buttons">
+                <button class="menu-btn" onclick="toggleNightSelection(true)">Play</button>
+                <button class="menu-btn" onclick="exportSaveFile()">Save Data</button>
+                <button class="menu-btn" onclick="triggerImport()">Import Data</button>
+                <button class="menu-btn" onclick="toggleCredits()">Credits</button>
+            </div>
+
+            <div id="night-selection-menu">
+                <div class="menu-label">Select Night</div>
+                <button class="menu-btn" id="btn-night1" onclick="startNight(1)">Night 1</button>
+                <button class="menu-btn" id="btn-night2" onclick="startNight(2)">Night 2</button>
+                <button class="menu-btn" id="btn-night3" onclick="startNight(3)">Night 3</button>
+                <button class="menu-btn" id="btn-night4" onclick="startNight(4)">Night 4</button>
+                <button class="menu-btn" id="btn-night5" onclick="startNight(5)">Night 5</button>
+                <button class="menu-btn back-btn" onclick="toggleNightSelection(false)">[ Back ]</button>
+            </div>
         </div>
+    </main>
+
+    <div id="credits-display">
+        Directed by @solanankico, Remade by Chatgpt, originally Grok &amp; Gemini.
     </div>
 
-    <input type="file" id="save-file-upload" accept=".save" style="display: none;" onchange="handleFileUpload(event)">
+    <div id="status-line">System // Ready</div>
+
+    <input type="file" id="save-file-upload" accept=".save" style="display:none" onchange="handleFileUpload(event)">
 
     <script src="Save-load_logic/saveSystem.js"></script>
 
     <script>
-        // --- Start Screen Audio Logic ---
-        document.getElementById('start-screen').addEventListener('click', function() {
-            const bgMusic = document.getElementById('bg-music');
-            bgMusic.play().catch(e => console.log("Audio play failed:", e));
+        const bgMusic = document.getElementById("bg-music");
+        const startScreen = document.getElementById("start-screen");
+        const mainMenu = document.getElementById("main-menu-buttons");
+        const nightMenu = document.getElementById("night-selection-menu");
+        const credits = document.getElementById("credits-display");
 
-            this.style.opacity = '0';
-            setTimeout(() => this.remove(), 1000);
+        // Start screen and audio
+        startScreen.addEventListener("click", function () {
+            bgMusic.play().catch(e => console.log("Audio play failed:", e));
+            startScreen.classList.add("hidden");
+            setTimeout(() => startScreen.remove(), 1150);
         }, { once: true });
 
-        // --- Menu Navigation Logic ---
+        // Small click feedback for every menu button.
+        document.querySelectorAll(".menu-btn").forEach(button => {
+            button.addEventListener("click", () => {
+                button.animate(
+                    [
+                        { transform: "translateX(7px) scale(1)" },
+                        { transform: "translateX(11px) scale(.94)" },
+                        { transform: "translateX(7px) scale(1)" }
+                    ],
+                    { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" }
+                );
+            });
+        });
+
         function toggleNightSelection(show) {
-            const mainMenu = document.getElementById('main-menu-buttons');
-            const nightMenu = document.getElementById('night-selection-menu');
-            
+            credits.classList.remove("visible");
+
             if (show) {
-                mainMenu.style.display = 'none';
-                nightMenu.style.display = 'flex';
-                updateMenuUI(); // Refresh locks every time it's opened
+                mainMenu.style.display = "none";
+                nightMenu.style.display = "flex";
+                nightMenu.classList.remove("leaving");
+                void nightMenu.offsetWidth;
+                nightMenu.classList.add("entering");
+                updateMenuUI();
             } else {
-                mainMenu.style.display = 'flex';
-                nightMenu.style.display = 'none';
+                nightMenu.classList.remove("entering");
+                nightMenu.classList.add("leaving");
+
+                setTimeout(() => {
+                    nightMenu.style.display = "none";
+                    mainMenu.style.display = "flex";
+                    mainMenu.animate(
+                        [
+                            { opacity: 0, transform: "translateX(-12px)" },
+                            { opacity: 1, transform: "translateX(0)" }
+                        ],
+                        { duration: 300, easing: "cubic-bezier(.2,.8,.2,1)" }
+                    );
+                }, 240);
             }
         }
 
-        // --- Night Redirection ---
         function startNight(night) {
+            const button = document.getElementById("btn-night" + night);
+            if (button && button.classList.contains("disabled")) return;
+
             if (night === 1) {
-                window.location.href = 'nights/night1intro.html'; 
+                window.location.href = "nights/night1intro.html";
             } else {
                 window.location.href = `nights/night${night}intro.html`;
             }
         }
 
-        // --- Import Data Wrapper ---
         function triggerImport() {
-            document.getElementById('save-file-upload').click();
+            document.getElementById("save-file-upload").click();
         }
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
+
             if (file) {
-                if (typeof window.importSaveFile === 'function') {
-                    window.importSaveFile(file); // From saveSystem.js
+                if (typeof window.importSaveFile === "function") {
+                    window.importSaveFile(file);
                 } else {
                     alert("Error: Save system not loaded properly.");
                 }
             }
-            // Reset input so the same file can be uploaded again if needed
-            event.target.value = ''; 
+
+            event.target.value = "";
         }
 
-        // --- Overriding updateMenuUI from saveSystem.js to handle our buttons ---
-        window.updateMenuUI = function() {
-            // Wait for gameProgress to be accessible from saveSystem.js
-            if (typeof gameProgress === 'undefined') return;
+        // Keep the original save/unlock behavior.
+        window.updateMenuUI = function () {
+            if (typeof gameProgress === "undefined") return;
 
-            // Night 1 is always unlocked.
-            
-            // Check unlocks
-            const btn2 = document.getElementById('btn-night2');
-            const btn3 = document.getElementById('btn-night3');
-            const btn4 = document.getElementById('btn-night4');
-            const btn5 = document.getElementById('btn-night5');
+            const btn2 = document.getElementById("btn-night2");
+            const btn3 = document.getElementById("btn-night3");
+            const btn4 = document.getElementById("btn-night4");
+            const btn5 = document.getElementById("btn-night5");
 
-            if (gameProgress.Night1done === 1) { btn2.classList.remove('disabled'); } else { btn2.classList.add('disabled'); }
-            if (gameProgress.Night2done === 1) { btn3.classList.remove('disabled'); } else { btn3.classList.add('disabled'); }
-            if (gameProgress.Night3done === 1) { btn4.classList.remove('disabled'); } else { btn4.classList.add('disabled'); }
-            if (gameProgress.Night4done === 1) { btn5.classList.remove('disabled'); } else { btn5.classList.add('disabled'); }
+            if (gameProgress.Night1done === 1) {
+                btn2.classList.remove("disabled");
+            } else {
+                btn2.classList.add("disabled");
+            }
+
+            if (gameProgress.Night2done === 1) {
+                btn3.classList.remove("disabled");
+            } else {
+                btn3.classList.add("disabled");
+            }
+
+            if (gameProgress.Night3done === 1) {
+                btn4.classList.remove("disabled");
+            } else {
+                btn4.classList.add("disabled");
+            }
+
+            if (gameProgress.Night4done === 1) {
+                btn5.classList.remove("disabled");
+            } else {
+                btn5.classList.add("disabled");
+            }
         };
 
-        // --- Credits Toggle ---
         function toggleCredits() {
-            const credits = document.getElementById('credits-display');
-            if (credits.style.opacity === '1') {
-                credits.style.opacity = '0';
-            } else {
-                credits.style.opacity = '1';
-            }
+            credits.classList.toggle("visible");
         }
     </script>
 </body>
