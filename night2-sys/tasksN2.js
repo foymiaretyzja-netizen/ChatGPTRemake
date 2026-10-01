@@ -633,7 +633,9 @@ if (btnPs7) {
             setPs7Progress(percent);
             if (ps7Time) ps7Time.textContent = secondsLeft.toFixed(1) + 's';
 
-            if (elapsed >= fundingFailureAt && !ps7FundingInterrupted) {
+            // The emergency loan is a one-time interruption. Once signed,
+            // PS7 must be allowed to finish its full 15-second purchase.
+            if (elapsed >= fundingFailureAt && !loanSigned) {
                 interruptPs7ForFunds();
                 return;
             }
@@ -695,6 +697,9 @@ if (btnLoan) {
             if (loanPaper) loanPaper.classList.add('signed');
             setTaskMessage('LOAN APPROVED // RESTART PS7 PURCHASE');
             hideLoanTask();
+
+            // Loan approval permanently clears the funding interruption.
+            // Do not use this flag to decide whether PS7 should fail again.
             ps7FundingInterrupted = false;
 
             if (btnPs7) {
