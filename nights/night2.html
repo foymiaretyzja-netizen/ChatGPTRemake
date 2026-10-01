@@ -15,6 +15,35 @@
             user-select: none; 
         }
 
+
+        // Start decoding every Night 2 visual immediately. This prevents the first
+        // camera/office view from waiting on a freshly requested image.
+        (function preloadNight2Assets() {
+            const night2Assets = [
+                '../Scenes/Presidential-room.jpg',
+                '../Scenes/Conference room.jpg',
+                '../Scenes/Diner.jpg',
+                '../Scenes/Janitor-room.jpg',
+                '../Scenes/Kitchen.jpg',
+                '../Scenes/Storage.jpg',
+                '../ScenesN2/guestroom-1.jpg',
+                '../ScenesN2/guestroom-2.jpg',
+                '../ScenesN2/guestroom-3.jpg',
+                '../ScenesN2/guestroom-4.jpg',
+                '../StoryScenes/Screenshot 2026-04-10 9.12.19 PM.png',
+                '../night2-sys/sprites/Charrlie.png',
+                '../night2-sys/sprites/Elong.png'
+            ];
+
+            window.night2AssetPreload = night2Assets.map(src => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = src;
+                if (img.decode) img.decode().catch(() => {});
+                return img;
+            });
+        })();
+
         /* --- 1. The Panning Office Background --- */
         #office-panorama {
             position: absolute;
@@ -271,8 +300,13 @@
 
         /* Camera Sprites */
         #camera-screen .ai-sprite {
-            bottom: 50px;
+            bottom: 0;
             height: 60%;
+            width: auto;
+            max-height: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            pointer-events: none;
         }
         #charrlie-sprite { left: 20%; }
         #elong-sprite { right: 20%; }
@@ -280,11 +314,31 @@
         /* Office/Jumpscare Sprites */
         #elong-sprite-office, #charrlie-sprite-office {
             height: 70%;
-            bottom: 10%;
+            width: auto;
+            max-height: 100%;
+            bottom: 0;
+            object-fit: contain;
+            object-position: center bottom;
             z-index: 100;
+            pointer-events: none;
         }
 
     </style>
+
+    <!-- Preload the entire Night 2 visual set so camera/office images are decoded before play. -->
+    <link rel="preload" as="image" href="../Scenes/Presidential-room.jpg">
+    <link rel="preload" as="image" href="../Scenes/Conference room.jpg">
+    <link rel="preload" as="image" href="../Scenes/Diner.jpg">
+    <link rel="preload" as="image" href="../Scenes/Janitor-room.jpg">
+    <link rel="preload" as="image" href="../Scenes/Kitchen.jpg">
+    <link rel="preload" as="image" href="../Scenes/Storage.jpg">
+    <link rel="preload" as="image" href="../ScenesN2/guestroom-1.jpg">
+    <link rel="preload" as="image" href="../ScenesN2/guestroom-2.jpg">
+    <link rel="preload" as="image" href="../ScenesN2/guestroom-3.jpg">
+    <link rel="preload" as="image" href="../ScenesN2/guestroom-4.jpg">
+    <link rel="preload" as="image" href="../StoryScenes/Screenshot 2026-04-10 9.12.19 PM.png">
+    <link rel="preload" as="image" href="../night2-sys/sprites/Charrlie.png">
+    <link rel="preload" as="image" href="../night2-sys/sprites/Elong.png">
 </head>
 <body>
 
