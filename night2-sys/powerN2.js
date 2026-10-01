@@ -24,6 +24,7 @@ const powerDownSound = new Audio('../Sounds/freesound_community-machine-powering
 let power = 100.0;
 let isBlackout = false;
 let lightsOn = true;
+window.isBlackout = false;
 let hasInteracted = false; 
 
 const BASE_DRAIN = 0.33; 
@@ -50,14 +51,27 @@ if (btnLights) {
         lightSwitchSound.play().catch(e => console.warn("[Audio] Switch sound error:", e));
 
         if (lightsOn) {
-            panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room.jpg')";
+            panoramaBg.style.transition = 'opacity 0.5s ease';
+            panoramaBg.style.opacity = '0';
+            setTimeout(() => {
+                if (!isBlackout) {
+                    panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room.jpg')";
+                    panoramaBg.style.opacity = '1';
+                }
+            }, 500);
             btnLights.innerText = "Turn Off Lights";
             btnLights.style.borderColor = "#ffbb00";
             btnLights.style.color = "#ffbb00";
             
             lightHumSound.play().catch(e => console.warn("[Audio] Hum resume error:", e));
         } else {
-            panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
+            panoramaBg.style.transition = 'opacity 0.5s ease';
+            panoramaBg.style.opacity = '0';
+            setTimeout(() => {
+                if (isBlackout) return;
+                panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
+                panoramaBg.style.opacity = '1';
+            }, 500);
             btnLights.innerText = "Turn On Lights";
             btnLights.style.borderColor = "#555";
             btnLights.style.color = "#aaa";
@@ -152,6 +166,7 @@ setInterval(() => {
 function triggerBlackout() {
     if (isBlackout) return; 
     isBlackout = true;
+    window.isBlackout = true;
     lightsOn = false;
     
     lightHumSound.pause();
@@ -160,7 +175,11 @@ function triggerBlackout() {
     powerDownSound.currentTime = 0;
     powerDownSound.play().catch(e => console.warn("[Audio] Power down sound error:", e));
     
-    if (panoramaBg) panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
+    if (panoramaBg) {
+        panoramaBg.style.transition = 'none';
+        panoramaBg.style.opacity = '1';
+        panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
+    }
     
     if (powerDisplay) {
         powerDisplay.innerText = "Power: 0%";
