@@ -25,7 +25,8 @@ let power = 100.0;
 let isBlackout = false;
 let lightsOn = true;
 window.isBlackout = false;
-let hasInteracted = false; 
+let hasInteracted = false;
+let lightTransitionTimer = null;
 
 const BASE_DRAIN = 0.33; 
 const SENSOR_POWER_COST = 1.5; 
@@ -51,9 +52,10 @@ if (btnLights) {
         lightSwitchSound.play().catch(e => console.warn("[Audio] Switch sound error:", e));
 
         if (lightsOn) {
+            clearTimeout(lightTransitionTimer);
             panoramaBg.style.transition = 'opacity 0.5s ease';
             panoramaBg.style.opacity = '0';
-            setTimeout(() => {
+            lightTransitionTimer = setTimeout(() => {
                 if (!isBlackout) {
                     panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room.jpg')";
                     panoramaBg.style.opacity = '1';
@@ -65,9 +67,10 @@ if (btnLights) {
             
             lightHumSound.play().catch(e => console.warn("[Audio] Hum resume error:", e));
         } else {
+            clearTimeout(lightTransitionTimer);
             panoramaBg.style.transition = 'opacity 0.5s ease';
             panoramaBg.style.opacity = '0';
-            setTimeout(() => {
+            lightTransitionTimer = setTimeout(() => {
                 if (isBlackout) return;
                 panoramaBg.style.backgroundImage = "url('../Scenes/Presidential-room-blackout.jpg')";
                 panoramaBg.style.opacity = '1';
@@ -167,6 +170,8 @@ function triggerBlackout() {
     if (isBlackout) return; 
     isBlackout = true;
     window.isBlackout = true;
+    clearTimeout(lightTransitionTimer);
+    if (typeof window.cancelCurrentTask === 'function') window.cancelCurrentTask();
     lightsOn = false;
     
     lightHumSound.pause();
