@@ -311,6 +311,17 @@ let nightCompleted = false;
             animation: n2WarningBlink .8s steps(2,end) infinite;
         }
 
+        /* Completed loan paperwork must never look like an unfinished alert. */
+        .loan-card.is-complete,
+        .loan-card.is-complete .n2-insufficient,
+        .loan-card.is-complete .n2-loan-warning {
+            animation: none !important;
+        }
+
+        .loan-card[hidden] {
+            display: none !important;
+        }
+
         .n2-loan-warning {
             color: #ffbd55;
             font: 700 8px "DM Mono", monospace;
@@ -444,8 +455,15 @@ function finishActiveState() {
 function showLoanTask() {
     loanRequired = true;
     ps7FundingInterrupted = true;
+
     if (ps7Card) ps7Card.hidden = true;
-    if (loanCard) loanCard.hidden = false;
+
+    if (loanCard) {
+        loanCard.hidden = false;
+        loanCard.style.removeProperty('display');
+        loanCard.classList.remove('is-complete');
+    }
+
     setTaskMessage('FUNDING INTERRUPTED // LOAN REQUIRED');
     if (loanStatus) loanStatus.textContent = 'ACTION REQUIRED // SIGN AUTHORIZATION';
     resetTaskProgress();
@@ -453,7 +471,15 @@ function showLoanTask() {
 
 function hideLoanTask() {
     loanRequired = false;
-    if (loanCard) loanCard.hidden = true;
+
+    // Fully remove the completed loan card from the active task UI.
+    // This prevents the warning blink from making it look actionable again.
+    if (loanCard) {
+        loanCard.classList.add('is-complete');
+        loanCard.hidden = true;
+        loanCard.style.display = 'none';
+    }
+
     if (ps7Card) ps7Card.hidden = false;
     setTaskMessage('LOAN APPROVED // PS7 PURCHASE RESTORED');
 }
@@ -666,6 +692,7 @@ if (btnLoan) {
 
             if (loanStatus) loanStatus.textContent = 'SIGNED // EMERGENCY CREDIT APPROVED';
             if (loanSignature) loanSignature.textContent = 'AUTHORIZED';
+            if (loanPaper) loanPaper.classList.add('signed');
             setTaskMessage('LOAN APPROVED // RESTART PS7 PURCHASE');
             hideLoanTask();
             ps7FundingInterrupted = false;
