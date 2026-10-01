@@ -463,7 +463,7 @@ function updateCameraHUD(roomName) {
     const index = Math.max(1, names.indexOf(roomName) + 1);
 
     if (room) room.textContent = roomName.toUpperCase();
-    if (node) node.textContent = \`NODE // CAM-\${String(index).padStart(2, '0')}\`;
+    if (node) node.textContent = `NODE // CAM-${String(index).padStart(2, '0')}`;
 
     const offline = !!window.isBlackout;
     if (signal) {
@@ -480,7 +480,7 @@ function updateCameraHUD(roomName) {
         if (positions.zuckenburger === roomName) detections.push('ZUCKENBURGER');
 
         tracks.innerHTML = detections.length
-            ? detections.map(name => \`<span class="n3-track detected">CONTACT // \${name}</span>\`).join('')
+            ? detections.map(name => `<span class="n3-track detected">CONTACT // ${name}</span>`).join('')
             : '<span class="n3-track">NO MOTION DETECTED</span>';
     }
 }
@@ -510,7 +510,7 @@ function setupCameraButtons() {
         btn.className = 'cam-btn';
         btn.type = 'button';
         btn.dataset.room = roomName;
-        btn.dataset.node = \`CAM-\${String(node).padStart(2, '0')}\`;
+        btn.dataset.node = `CAM-${String(node).padStart(2, '0')}`;
         btn.textContent = roomName.toUpperCase();
 
         btn.onclick = () => {
@@ -576,9 +576,9 @@ function setFeed(roomName) {
             : 1;
 
         cameraFeed.style.backgroundImage =
-            \`url('../ScenesN2/guestroom-\${stage}.jpg')\`;
+            `url('../ScenesN2/guestroom-${stage}.jpg')`;
     } else if (rooms[roomName]) {
-        cameraFeed.style.backgroundImage = \`url('\\${rooms[roomName]}')\`;
+        cameraFeed.style.backgroundImage = `url('\${rooms[roomName]}')`;
     }
 }
 
