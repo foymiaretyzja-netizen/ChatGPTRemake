@@ -73,6 +73,15 @@ let nightCompleted = false;
             color: #dce5df;
         }
 
+
+        .n2-task-panel.is-visible {
+            transform: translateY(0) !important;
+        }
+
+        .n2-task-panel.is-visible:hover {
+            transform: translateY(0) !important;
+        }
+
         .n2-task-panel::-webkit-scrollbar { width: 6px; }
         .n2-task-panel::-webkit-scrollbar-track { background: #090b0a; }
         .n2-task-panel::-webkit-scrollbar-thumb { background: #3a443f; }
