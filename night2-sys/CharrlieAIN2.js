@@ -86,7 +86,7 @@ function startCharrlieDash() {
         console.warn('[Audio] Charrlie run blocked:', e)
     );
 
-    applyDashStatic(true);
+    window.applyCharrlieDashStatic(true);
     clearCharrlieTimer();
 
     const runId = charrlieRunId;
@@ -149,7 +149,7 @@ function resetCharrlie() {
     window.charrlieStage = 1;
     window.aiPositions.charrlie = 'Guest Room';
 
-    applyDashStatic(false);
+    window.applyCharrlieDashStatic(false);
     refreshCharrlieCamera();
 
     console.log('[Charrlie AI] Both doors blocked. Returning to Guest Room.');
@@ -195,7 +195,7 @@ function triggerCharrlieJumpscare() {
     setTimeout(() => location.reload(), 2000);
 }
 
-function applyDashStatic(isActive) {
+window.applyCharrlieDashStatic = function(isActive) {
     const staticFlash = document.getElementById('static-flash');
     if (!staticFlash) return;
 
