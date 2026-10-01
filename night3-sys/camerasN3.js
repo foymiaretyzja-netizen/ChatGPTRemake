@@ -578,7 +578,7 @@ function setFeed(roomName) {
         cameraFeed.style.backgroundImage =
             `url('../ScenesN2/guestroom-${stage}.jpg')`;
     } else if (rooms[roomName]) {
-        cameraFeed.style.backgroundImage = `url('\${rooms[roomName]}')`;
+        cameraFeed.style.backgroundImage = `url('${rooms[roomName]}')`;
     }
 }
 
