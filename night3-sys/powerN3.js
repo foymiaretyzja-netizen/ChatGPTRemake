@@ -28,7 +28,7 @@ const powerDownSound = new Audio('../Sounds/freesound_community-machine-powering
 if (powerDisplay) {
     powerDisplay.innerHTML = '<div class="n3-power-shell">
         <div class="n3-power-head"><div><div class="n3-power-kicker">SYS-PWR / 03</div><div class="n3-power-title">BLACK HOUSE POWER BUS</div></div><div class="n3-power-status">OFFLINE</div></div>
-        <div class="n3-power-main"><div class="n3-power-meter-top"><span>RESERVE CAPACITY</span><strong class="n3-power-value">0%</strong></div><div class="n3-power-bar"><span class="n3-power-fill"></span></div><div class="n3-power-readouts"><span class="n3-power-draw">DRAW // 0.00% / SEC</span><span>BUS // NIGHT 03</span></div></div>
+        <div class="n3-power-main"><div class="n3-power-meter-top"><span>RESERVE CAPACITY</span><strong class="n3-power-value">100%</strong></div><div class="n3-power-bar"><span class="n3-power-fill" style="width:100%"></span></div><div class="n3-power-readouts"><span class="n3-power-draw">DRAW // 0.00% / SEC</span><span>BUS // NIGHT 03</span></div></div>
         <div class="n3-power-grid"><div><span>LIGHTING</span><strong class="n3-light-state">OFFLINE</strong></div><div><span>DOOR ARRAY</span><strong>READY</strong></div><div><span>MOTION GRID</span><strong class="n3-motion-state">OFFLINE</strong></div></div>
     </div>';
 }
