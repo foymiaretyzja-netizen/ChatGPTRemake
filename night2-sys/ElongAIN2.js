@@ -35,6 +35,7 @@ window.aiPositions = window.aiPositions || {};
 window.aiPositions.elong = elongCurrentRoom;
 
 function loopElong() {
+    if (window.isBlackout) return;
     if (elongActive) {
         moveElong();
     }
@@ -42,7 +43,7 @@ function loopElong() {
 }
 
 function moveElong() {
-    if (!elongActive || elongAtDoor) return; 
+    if (window.isBlackout || !elongActive || elongAtDoor) return; 
 
     console.log(`[Elong AI] Assessing move... Current location: ${elongCurrentRoom}`);
 
@@ -89,6 +90,7 @@ function moveElong() {
 }
 
 function triggerElongAtDoor() {
+    if (window.isBlackout) return;
     elongAtDoor = true;
     playElongHorrorSound();
 
@@ -108,6 +110,7 @@ function triggerElongAtDoor() {
 }
 
 function handleElongLinger() {
+    if (window.isBlackout) return;
     const lingerTime = Math.random() * 5000 + 5000;
     elongLingerTimeout = setTimeout(() => {
         if (window.rightDoorClosed) {
@@ -121,6 +124,7 @@ function handleElongLinger() {
 }
 
 function resetElong() {
+    clearTimeout(elongMoveTimeout);
     elongAtDoor = false;
     
     clearTimeout(elongGraceTimer);
@@ -144,6 +148,13 @@ function playElongHorrorSound() {
 }
 
 function triggerElongJumpscare() {
+    if (window.isBlackout) return;
+    elongActive = false;
+    clearTimeout(elongMoveTimeout);
+    clearTimeout(elongGraceTimer);
+    clearTimeout(elongLingerTimeout);
+    clearInterval(elongSoundLoop);
+
     const mon = document.getElementById('camera-monitor');
     if (mon) mon.style.display = 'none';
 
@@ -167,6 +178,7 @@ function triggerElongJumpscare() {
 
 // --- NIGHT 2 INITIAL GRACE PERIOD ---
 setTimeout(() => {
+    if (window.isBlackout) return;
     elongActive = true;
     console.log("[Elong AI] 45 SECONDS PASSED: Elong is now active.");
     
