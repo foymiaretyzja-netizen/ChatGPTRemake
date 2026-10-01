@@ -294,12 +294,89 @@
         Power: 100%
     </div>
 
-    <div id="left-panel" class="task-panel">
-        <div class="tab-label">DEP-9000</div>
-        <h2 style="color: #ff4444; margin-bottom: 15px; font-size: 1.3rem;">Deportor-9000</h2>
-        <div style="display: flex; flex-direction: column; gap: 15px;">
-            <button id="btn-deport" class="sys-btn">Fund cure for Liberal virius (0/15)</button>
-            <button id="btn-missile" class="sys-btn">Buy the new PS7 (0/1)</button>
+    <div id="left-panel" class="task-panel n2-task-panel">
+        <div class="n2-task-header">
+            <div>
+                <div class="tab-label">MED / PROCUREMENT</div>
+                <div class="n2-task-subtitle">BLACK HOUSE TASK COMPUTER // NIGHT 02</div>
+            </div>
+            <div class="n2-task-status">ONLINE</div>
+        </div>
+
+        <div class="n2-task-divider"></div>
+
+        <section class="n2-task-card" id="cure-card">
+            <div class="n2-card-top">
+                <div>
+                    <div class="n2-card-code">VAC-01</div>
+                    <h2>Fund Vaccine</h2>
+                </div>
+                <div class="n2-count" id="cure-count">0 / 15</div>
+            </div>
+
+            <div class="n2-card-body cure-layout">
+                <div class="vaccine-meter" aria-hidden="true">
+                    <div class="vaccine-meter-fill" id="cure-progress"></div>
+                    <div class="vaccine-meter-lines"></div>
+                    <span>VAX</span>
+                </div>
+                <div class="n2-card-info">
+                    <div class="n2-card-description">Allocate emergency funding to the infected-patient vaccine.</div>
+                    <div class="n2-task-statusline" id="cure-status">READY // 3.0 SEC FUNDING CYCLE</div>
+                    <button id="btn-deport" class="sys-btn n2-action">FUND VACCINE</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="n2-task-card" id="ps7-card">
+            <div class="n2-card-top">
+                <div>
+                    <div class="n2-card-code">PS-07</div>
+                    <h2>Purchase PS7</h2>
+                </div>
+                <div class="n2-count" id="ps7-count">0 / 1</div>
+            </div>
+
+            <div class="n2-card-body">
+                <div class="n2-card-info full">
+                    <div class="n2-card-description">Authorize procurement. Estimated transaction time: 15 seconds.</div>
+                    <div class="n2-progress-track">
+                        <div class="n2-progress-fill" id="ps7-progress"></div>
+                    </div>
+                    <div class="n2-progress-meta">
+                        <span id="ps7-status">READY // AWAITING AUTHORIZATION</span>
+                        <span id="ps7-time">15.0s</span>
+                    </div>
+                    <button id="btn-missile" class="sys-btn n2-action">PURCHASE PS7</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="n2-task-card loan-card" id="loan-card" hidden>
+            <div class="n2-card-top">
+                <div>
+                    <div class="n2-card-code">FIN-LOAN</div>
+                    <h2>Emergency Loan</h2>
+                </div>
+                <div class="n2-loan-warning">FUNDS LOW</div>
+            </div>
+            <div class="n2-card-body">
+                <div class="n2-card-info full">
+                    <div class="n2-insufficient">INSUFFICIENT FUNDS</div>
+                    <div class="n2-card-description">The PS7 purchase reached its funding limit. Sign the emergency financing authorization to continue.</div>
+                    <div class="loan-paper">
+                        <div class="loan-paper-lines"></div>
+                        <div class="loan-signature" id="loan-signature">SIGN HERE</div>
+                    </div>
+                    <div class="n2-task-statusline" id="loan-status">READY // SIGN AUTHORIZATION</div>
+                    <button id="btn-loan" class="sys-btn n2-action">SIGN LOAN PAPER</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="n2-task-footer">
+            <span>SYS:// FUNDING</span>
+            <span id="n2-task-message">TASKS READY</span>
         </div>
     </div>
 
