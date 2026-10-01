@@ -25,24 +25,35 @@ let elongAtDoor = false;
 let elongGraceTimer = null;
 let elongSoundLoop = null;
 
-let elongMoveTimeout = null; 
+let elongMoveTimeout = null;
 let elongLingerTimeout = null;
+let elongTransitionTimeout = null;
+let elongRunId = 0;
 
 let elongActive = false; 
 
 window.aiPositions = window.aiPositions || {};
 window.aiPositions.elong = elongCurrentRoom;
 
+function clearElongTimers() {
+    clearTimeout(elongMoveTimeout);
+    clearTimeout(elongLingerTimeout);
+    clearTimeout(elongTransitionTimeout);
+    clearInterval(elongSoundLoop);
+    elongMoveTimeout = null;
+    elongLingerTimeout = null;
+    elongTransitionTimeout = null;
+    elongSoundLoop = null;
+}
+
 function loopElong() {
-    if (elongActive) {
-        moveElong();
-    }
-    // NIGHT 3: Faster movement loop (7 to 9 seconds)
+    if (!elongActive || window.isBlackout) return;
+    moveElong();
     elongMoveTimeout = setTimeout(loopElong, Math.random() * 2000 + 7000);
 }
 
 function moveElong() {
-    if (!elongActive || elongAtDoor) return; 
+    if (!elongActive || elongAtDoor || window.isBlackout) return; 
 
     console.log(`[Elong AI] Assessing move... Current location: ${elongCurrentRoom}`);
 
@@ -66,10 +77,13 @@ function moveElong() {
         elongStaticSound.play().catch((e) => console.warn("[Audio Blocked] Static sound:", e));
 
         if (window.isCameraOpen && typeof window.triggerLongFlicker === "function") {
-            window.triggerLongFlicker(); 
+            window.triggerLongFlicker(elongCurrentRoom, nextRoom);
         }
 
-        setTimeout(() => {
+        const runId = elongRunId;
+        clearTimeout(elongTransitionTimeout);
+        elongTransitionTimeout = setTimeout(() => {
+            if (runId !== elongRunId || window.isBlackout || !elongActive) return;
             elongCurrentRoom = nextRoom;
             window.aiPositions.elong = elongCurrentRoom;
             
@@ -93,6 +107,7 @@ function triggerElongAtDoor() {
 
     // RESTORED: 10 seconds to react to balance the harder tasks
     elongGraceTimer = setTimeout(() => {
+        if (window.isBlackout) return;
         if (!window.rightDoorClosed) {
             console.log(`[Elong AI] Door open. Triggering jumpscare!`);
             triggerElongJumpscare();
@@ -124,10 +139,10 @@ function handleElongLinger() {
 
 function resetElong() {
     elongAtDoor = false;
+    elongRunId++;
     
     clearTimeout(elongGraceTimer);
-    clearTimeout(elongLingerTimeout);
-    clearInterval(elongSoundLoop);
+    clearElongTimers();
     
     elongCurrentRoom = 'Storage';
     window.aiPositions.elong = elongCurrentRoom;
@@ -146,6 +161,11 @@ function playElongHorrorSound() {
 }
 
 function triggerElongJumpscare() {
+    if (window.isBlackout) return;
+    elongActive = false;
+    elongRunId++;
+    clearTimeout(elongGraceTimer);
+    clearElongTimers();
     const mon = document.getElementById('camera-monitor');
     if (mon) mon.style.display = 'none';
 
@@ -168,6 +188,7 @@ function triggerElongJumpscare() {
 
 // --- NIGHT 3 INITIAL GRACE PERIOD ---
 setTimeout(() => {
+    if (window.isBlackout) return;
     elongActive = true;
     console.log("[Elong AI] 35 SECONDS PASSED: Elong is now active.");
     
