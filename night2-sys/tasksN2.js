@@ -33,6 +33,7 @@ window.isTaskActive = false;
 // Timer Storage
 let activeTaskTimer = null;
 let activeTaskType = null; // 'cure' or 'ps7'
+let nightCompleted = false;
 
 // Helper: Disables/Enables buttons while respecting max limits
 function setTaskButtonsDisabled(disabled) {
@@ -42,7 +43,7 @@ function setTaskButtonsDisabled(disabled) {
 
 // --- Cancellation Logic ---
 window.cancelCurrentTask = function() {
-    if (activeTaskTimer) {
+    if (activeTaskTimer || window.isTaskActive) {
         clearInterval(activeTaskTimer);
         activeTaskTimer = null;
         window.isTaskActive = false;
@@ -50,10 +51,10 @@ window.cancelCurrentTask = function() {
         stopTaskAudio(); // Stop the sound if canceled by opening cameras or a jumpscare
         
         // Reset Button UI
-        if (activeTaskType === 'cure') {
+        if (activeTaskType === 'cure' && btnCure) {
             btnCure.style.color = "#ccc";
             btnCure.innerText = `Fund cure for Liberal virius (${cureCount}/${MAX_CURE})`;
-        } else if (activeTaskType === 'ps7') {
+        } else if (activeTaskType === 'ps7' && btnPs7) {
             btnPs7.style.color = "#ccc";
             btnPs7.innerText = `Buy the new PS7 (${ps7Count}/${MAX_PS7})`;
         }
@@ -73,7 +74,7 @@ if (btnCamera) {
 
 // --- Task 1: Fund Cure (5 Seconds) ---
 btnCure.addEventListener('click', () => {
-    if (typeof isBlackout !== 'undefined' && isBlackout) return; 
+    if (window.isBlackout) return; 
     if (window.isTaskActive || cureCount >= MAX_CURE) return;
 
     window.isTaskActive = true;
@@ -121,7 +122,7 @@ function finishCure() {
 
 // --- Task 2: Buy PS7 (15 Seconds) ---
 btnPs7.addEventListener('click', () => {
-    if (typeof isBlackout !== 'undefined' && isBlackout) return;
+    if (window.isBlackout) return;
     if (window.isTaskActive || ps7Count >= MAX_PS7) return;
 
     window.isTaskActive = true;
@@ -169,7 +170,9 @@ function finishPs7() {
 
 // --- End of Night Win Condition ---
 function checkWinCondition() {
+    if (nightCompleted || window.isBlackout) return;
     if (cureCount >= MAX_CURE && ps7Count >= MAX_PS7) {
+        nightCompleted = true;
         triggerWin();
     }
 }
@@ -207,58 +210,116 @@ function launchConfetti() {
 }
 
 function triggerWin() {
-    const fadeOutDiv = document.createElement('div');
-    fadeOutDiv.style.position = 'fixed';
-    fadeOutDiv.style.top = '0';
-    fadeOutDiv.style.left = '0';
-    fadeOutDiv.style.width = '100vw';
-    fadeOutDiv.style.height = '100vh';
-    fadeOutDiv.style.backgroundColor = '#000';
-    fadeOutDiv.style.opacity = '0';
-    fadeOutDiv.style.zIndex = '9999'; 
-    fadeOutDiv.style.transition = 'opacity 3s ease-in-out';
-    fadeOutDiv.style.pointerEvents = 'all'; 
-    document.body.appendChild(fadeOutDiv);
+    if (window.night2WinStarted) return;
+    window.night2WinStarted = true;
 
-    const winText = document.createElement('div');
-    winText.innerText = "6:00 AM";
-    winText.style.position = 'fixed';
-    winText.style.top = '50%';
-    winText.style.left = '50%';
-    winText.style.transform = 'translate(-50%, -50%)';
-    winText.style.color = '#fff';
-    winText.style.fontFamily = "'Courier New', Courier, monospace";
-    winText.style.fontSize = '4rem';
-    winText.style.fontWeight = 'bold';
-    winText.style.zIndex = '10000';
-    winText.style.opacity = '0';
-    winText.style.transition = 'opacity 3s ease-in-out 1.5s'; 
-    document.body.appendChild(winText);
+    document.body.style.cursor = 'none';
 
-    // Using ../ for consistent audio paths
+    const endScreen = document.createElement('div');
+    endScreen.id = 'night-end-screen';
+    endScreen.innerHTML = `
+        <div class="night-end-vignette"></div>
+        <div class="night-end-dawn"></div>
+        <div class="night-end-scanlines"></div>
+        <div class="night-end-time">6:00 AM</div>
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        #night-end-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000;
+            opacity: 0;
+            pointer-events: all;
+            transition: opacity 2.8s ease;
+            overflow: hidden;
+        }
+
+        .night-end-dawn {
+            position: absolute;
+            inset: -20%;
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(255,255,255,.055),
+                transparent 48%
+            );
+            opacity: .9;
+        }
+
+        .night-end-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                ellipse at center,
+                transparent 30%,
+                rgba(0,0,0,.92) 100%
+            );
+        }
+
+        .night-end-scanlines {
+            position: absolute;
+            inset: 0;
+            opacity: .13;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0,
+                transparent 3px,
+                rgba(255,255,255,.035) 4px
+            );
+        }
+
+        .night-end-time {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -46%) scale(.97);
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 700;
+            letter-spacing: .06em;
+            opacity: 0;
+            filter: blur(7px);
+            text-shadow: 0 0 18px rgba(255,255,255,.28);
+            transition:
+                opacity 2.2s ease 1.1s,
+                transform 2.4s cubic-bezier(.22,.61,.36,1) 1.1s,
+                filter 2.2s ease 1.1s;
+        }
+
+        #night-end-screen.is-visible .night-end-time {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            filter: blur(0);
+        }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(endScreen);
+
+    requestAnimationFrame(() => endScreen.classList.add('is-visible'));
+
     const clockChime = new Audio('../Sounds/li-bing-tower-clock-chimewestminster-187254.mp3');
     const confettiCheer = new Audio('../Sounds/u_jspnqv1glx-1gift-confetti-447240.mp3');
 
     if (typeof window.completeNight === 'function') {
-        window.completeNight(2); 
+        window.completeNight(2);
     } else {
-        console.warn("Save system not found. Make sure saveSystem.js is linked in your HTML.");
+        console.warn('Save system not found. Make sure saveSystem.js is linked in your HTML.');
     }
 
-    setTimeout(() => { 
-        fadeOutDiv.style.opacity = '1'; 
-        clockChime.play().catch(e => console.log("[Tasks] Audio block:", e));
-    }, 100);
+    setTimeout(() => {
+        clockChime.play().catch(e => console.log('[Tasks] Audio block:', e));
+    }, 450);
 
-    setTimeout(() => { 
-        winText.style.opacity = '1'; 
-        confettiCheer.play().catch(e => console.log("[Tasks] Audio block:", e));
-        launchConfetti(); 
-        
-        // Return to title screen
-        setTimeout(() => { 
-            window.location.href = '../title.html'; 
-        }, 15000);
-        
-    }, 2000); 
+    setTimeout(() => {
+        confettiCheer.play().catch(e => console.log('[Tasks] Audio block:', e));
+        launchConfetti();
+    }, 3600);
+
+    setTimeout(() => {
+        window.location.href = '../title.html';
+    }, 15000);
 }
