@@ -39,7 +39,7 @@ function setupCameraButtons() {
         btn.innerText = `CAM: ${roomName}`;
         
         btn.onclick = () => {
-            if (window.currentCamera === roomName) return;
+            if (window.isBlackout || window.currentCamera === roomName) return;
             document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             switchCamera(roomName);
@@ -96,6 +96,7 @@ window.triggerLongFlicker = function(oldRoom, newRoom) {
 };
 
 function switchCamera(roomName, playAudio = true) {
+    if (window.isBlackout) return;
     if (playAudio) {
         playCameraSound();
         window.triggerFlicker(); 
@@ -128,6 +129,7 @@ window.refreshCameraUI = function() {
 };
 
 window.toggleCamera = function() {
+    if (window.isBlackout && !window.isCameraOpen) return;
     window.isCameraOpen = !window.isCameraOpen;
     
     if (window.isCameraOpen) {
