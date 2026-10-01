@@ -1,16 +1,30 @@
 // --- night2-sys/tasksN2.js ---
+// Night 2 task computer. Same visual language as Night 1, but with Night 2's
+// vaccine, PS7 procurement, and emergency-loan mechanics.
 
-// NOTE: If you changed the IDs in your HTML, update 'btn-deport' and 'btn-missile' here!
-const btnCure = document.getElementById('btn-deport'); 
-const btnPs7 = document.getElementById('btn-missile'); 
+const btnCure = document.getElementById('btn-deport');
+const btnPs7 = document.getElementById('btn-missile');
+const btnLoan = document.getElementById('btn-loan');
 const btnCamera = document.getElementById('camera-btn');
 
-// --- Audio System ---
-// Using ../ to ensure it routes out of night2-sys correctly
+const cureProgress = document.getElementById('cure-progress');
+const ps7Progress = document.getElementById('ps7-progress');
+const cureCountLabel = document.getElementById('cure-count');
+const ps7CountLabel = document.getElementById('ps7-count');
+const cureStatus = document.getElementById('cure-status');
+const ps7Status = document.getElementById('ps7-status');
+const ps7Time = document.getElementById('ps7-time');
+const loanCard = document.getElementById('loan-card');
+const ps7Card = document.getElementById('ps7-card');
+const loanStatus = document.getElementById('loan-status');
+const loanSignature = document.getElementById('loan-signature');
+const taskMessage = document.getElementById('n2-task-message');
+
 const taskAudio = new Audio('../Sounds/alex_jauk-coffee-machine-noise-218424.mp3');
 
 function startTaskAudio() {
     taskAudio.currentTime = 0;
+    taskAudio.loop = true;
     taskAudio.play().catch(e => console.log("[Tasks] Audio block:", e));
 }
 
@@ -19,155 +33,622 @@ function stopTaskAudio() {
     taskAudio.currentTime = 0;
 }
 
-// Task 1: Cure Variables
+// ============================================================
+// TASK STATE
+// ============================================================
+
 let cureCount = 0;
 const MAX_CURE = 15;
 
-// Task 2: PS7 Variables
 let ps7Count = 0;
 const MAX_PS7 = 1;
 
-// AI Data Relay & State Variables
-window.isTaskActive = false; 
+let loanRequired = false;
+let loanSigned = false;
+let ps7FundingInterrupted = false;
 
-// Timer Storage
+window.isTaskActive = false;
 let activeTaskTimer = null;
-let activeTaskType = null; // 'cure' or 'ps7'
+let activeTaskType = null;
 let nightCompleted = false;
 
-// Helper: Disables/Enables buttons while respecting max limits
-function setTaskButtonsDisabled(disabled) {
-    btnCure.disabled = disabled || (cureCount >= MAX_CURE);
-    btnPs7.disabled = disabled || (ps7Count >= MAX_PS7);
+// ============================================================
+// TASK PANEL UI
+// ============================================================
+
+(function injectNight2TaskUI() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .n2-task-panel {
+            width: 390px !important;
+            height: 390px !important;
+            padding: 15px !important;
+            background:
+                linear-gradient(180deg, rgba(12,15,14,.98), rgba(6,8,8,.98)),
+                #080a09 !important;
+            border: 1px solid #4a544e !important;
+            border-bottom: none !important;
+            border-radius: 14px 14px 0 0 !important;
+            box-shadow: 0 -12px 34px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.035);
+            color: #dce5df;
+        }
+
+        .n2-task-panel::-webkit-scrollbar { width: 6px; }
+        .n2-task-panel::-webkit-scrollbar-track { background: #090b0a; }
+        .n2-task-panel::-webkit-scrollbar-thumb { background: #3a443f; }
+
+        .n2-task-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .n2-task-panel .tab-label {
+            margin: 0 0 4px !important;
+            text-align: left !important;
+            color: #c9d3cd !important;
+            font-size: 10px !important;
+            letter-spacing: .16em !important;
+        }
+
+        .n2-task-subtitle,
+        .n2-card-code,
+        .n2-task-footer,
+        .n2-progress-meta,
+        .n2-task-statusline {
+            font-family: "DM Mono", "Courier New", monospace;
+        }
+
+        .n2-task-subtitle {
+            color: #68736d;
+            font-size: 8px;
+            letter-spacing: .08em;
+        }
+
+        .n2-task-status {
+            color: #7dffbe;
+            border: 1px solid rgba(125,255,190,.38);
+            padding: 4px 7px;
+            font: 700 8px "DM Mono", monospace;
+            letter-spacing: .08em;
+            background: rgba(125,255,190,.04);
+        }
+
+        .n2-task-divider {
+            height: 1px;
+            margin: 10px 0;
+            background: linear-gradient(90deg, transparent, #38413c 12%, #38413c 88%, transparent);
+        }
+
+        .n2-task-card {
+            position: relative;
+            margin-bottom: 9px;
+            padding: 10px;
+            border: 1px solid #29312d;
+            background: rgba(0,0,0,.25);
+            box-shadow: inset 0 1px rgba(255,255,255,.018);
+        }
+
+        .n2-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .n2-card-code {
+            color: #65726b;
+            font-size: 8px;
+            letter-spacing: .12em;
+        }
+
+        .n2-task-card h2 {
+            margin: 2px 0 0;
+            color: #dfe8e2;
+            font: 700 14px/1.1 "Courier New", monospace;
+            letter-spacing: .03em;
+        }
+
+        .n2-count {
+            color: #8d9992;
+            font: 700 10px "DM Mono", monospace;
+            white-space: nowrap;
+        }
+
+        .n2-card-body {
+            display: flex;
+            gap: 10px;
+        }
+
+        .n2-card-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .n2-card-info.full { width: 100%; }
+
+        .n2-card-description {
+            color: #737e78;
+            font: 8px/1.45 "DM Mono", monospace;
+            letter-spacing: .025em;
+            margin-bottom: 7px;
+        }
+
+        .n2-task-statusline {
+            min-height: 13px;
+            color: #68736d;
+            font-size: 8px;
+            letter-spacing: .05em;
+            margin-bottom: 7px;
+        }
+
+        .n2-action {
+            position: relative;
+            overflow: hidden;
+            min-height: 32px !important;
+            padding: 8px !important;
+            color: #b8c2bc !important;
+            border-color: #3c4741 !important;
+            background: linear-gradient(180deg, #171d1a, #0d1110) !important;
+            font-size: 9px !important;
+            letter-spacing: .07em;
+        }
+
+        .n2-action:hover:not(:disabled) {
+            color: #eef6f1 !important;
+            border-color: #748078 !important;
+            background: #18201c !important;
+        }
+
+        .n2-action:disabled {
+            opacity: .48;
+            cursor: wait;
+        }
+
+        .cure-layout { align-items: stretch; }
+
+        .vaccine-meter {
+            position: relative;
+            flex: 0 0 38px;
+            height: 112px;
+            overflow: hidden;
+            border: 1px solid #263d50;
+            background: #071019;
+        }
+
+        .vaccine-meter-fill {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 0%;
+            background: linear-gradient(180deg, #43bfff, #0879c9);
+            box-shadow: 0 0 16px rgba(45,165,240,.28);
+            transition: height .12s linear;
+        }
+
+        .vaccine-meter-lines {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0 10px,
+                rgba(190,225,245,.09) 10px 11px
+            );
+            pointer-events: none;
+        }
+
+        .vaccine-meter span {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%) rotate(-90deg);
+            color: rgba(220,240,255,.72);
+            font: 700 8px "DM Mono", monospace;
+            letter-spacing: .12em;
+            pointer-events: none;
+        }
+
+        .n2-progress-track {
+            position: relative;
+            height: 14px;
+            overflow: hidden;
+            border: 1px solid #242b27;
+            background: #080b09;
+            margin: 7px 0 5px;
+        }
+
+        .n2-progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #56635b, #9aa8a0);
+            box-shadow: 0 0 12px rgba(150,170,160,.14);
+            transition: width .08s linear;
+        }
+
+        .n2-progress-fill.warning {
+            background: linear-gradient(90deg, #775b22, #d69d35);
+            box-shadow: 0 0 13px rgba(214,157,53,.22);
+        }
+
+        .n2-progress-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            color: #68736d;
+            font-size: 8px;
+            margin-bottom: 7px;
+        }
+
+        .n2-insufficient {
+            color: #ffbd55;
+            font: 700 10px "DM Mono", monospace;
+            letter-spacing: .12em;
+            margin-bottom: 6px;
+            animation: n2WarningBlink .8s steps(2,end) infinite;
+        }
+
+        .n2-loan-warning {
+            color: #ffbd55;
+            font: 700 8px "DM Mono", monospace;
+            border: 1px solid rgba(255,189,85,.35);
+            padding: 4px 6px;
+        }
+
+        @keyframes n2WarningBlink {
+            50% { opacity: .45; }
+        }
+
+        .loan-card {
+            border-color: #55452c;
+            background: rgba(34,25,12,.25);
+        }
+
+        .loan-paper {
+            position: relative;
+            height: 46px;
+            margin: 7px 0;
+            overflow: hidden;
+            border: 1px solid #57524a;
+            background: linear-gradient(135deg, #d8d2c5, #a9a396);
+            color: #25231f;
+            cursor: pointer;
+        }
+
+        .loan-paper-lines {
+            position: absolute;
+            inset: 8px 10px;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0 9px,
+                rgba(50,45,38,.2) 9px 10px
+            );
+        }
+
+        .loan-signature {
+            position: absolute;
+            right: 12px;
+            bottom: 7px;
+            color: #1b4f76;
+            font: italic 15px "Comic Sans MS", cursive;
+            opacity: .75;
+            transform: rotate(-4deg);
+        }
+
+        .loan-paper.signed {
+            border-color: #79b8e2;
+            box-shadow: 0 0 14px rgba(70,170,230,.15);
+        }
+
+        .loan-paper.signed .loan-signature {
+            color: #155b91;
+            opacity: 1;
+        }
+
+        .n2-task-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            color: #505a54;
+            font-size: 7px;
+            letter-spacing: .08em;
+        }
+
+        @media (max-width: 720px) {
+            .n2-task-panel {
+                width: min(390px, 94vw) !important;
+                left: 3vw !important;
+                right: auto !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function setDisabledState() {
+    if (btnCure) btnCure.disabled = window.isBlackout || window.isTaskActive || cureCount >= MAX_CURE;
+    if (btnPs7) btnPs7.disabled = window.isBlackout || window.isTaskActive || ps7Count >= MAX_PS7 || loanRequired;
+    if (btnLoan) btnLoan.disabled = window.isBlackout || window.isTaskActive || loanSigned;
 }
 
-// --- Cancellation Logic ---
-window.cancelCurrentTask = function() {
-    if (activeTaskTimer || window.isTaskActive) {
+function updateCounts() {
+    if (cureCountLabel) cureCountLabel.textContent = `${cureCount} / ${MAX_CURE}`;
+    if (ps7CountLabel) ps7CountLabel.textContent = `${ps7Count} / ${MAX_PS7}`;
+}
+
+function setTaskMessage(message) {
+    if (taskMessage) taskMessage.textContent = message;
+}
+
+function setCureProgress(percent) {
+    if (cureProgress) cureProgress.style.height = Math.max(0, Math.min(100, percent)) + '%';
+}
+
+function setPs7Progress(percent) {
+    if (ps7Progress) ps7Progress.style.width = Math.max(0, Math.min(100, percent)) + '%';
+}
+
+function resetTaskProgress() {
+    setCureProgress(0);
+    setPs7Progress(0);
+    if (ps7Progress) ps7Progress.classList.remove('warning');
+    if (ps7Time) ps7Time.textContent = '15.0s';
+}
+
+function clearActiveTimer() {
+    if (activeTaskTimer) {
         clearInterval(activeTaskTimer);
+        cancelAnimationFrame(activeTaskTimer);
         activeTaskTimer = null;
-        window.isTaskActive = false;
-        
-        stopTaskAudio(); // Stop the sound if canceled by opening cameras or a jumpscare
-        
-        // Reset Button UI
-        if (activeTaskType === 'cure' && btnCure) {
-            btnCure.style.color = "#ccc";
-            btnCure.innerText = `Fund cure for Liberal virius (${cureCount}/${MAX_CURE})`;
-        } else if (activeTaskType === 'ps7' && btnPs7) {
-            btnPs7.style.color = "#ccc";
-            btnPs7.innerText = `Buy the new PS7 (${ps7Count}/${MAX_PS7})`;
-        }
-        
-        setTaskButtonsDisabled(false);
-        activeTaskType = null;
-        console.log("Task canceled by player movement!");
     }
+}
+
+function finishActiveState() {
+    clearActiveTimer();
+    stopTaskAudio();
+    window.isTaskActive = false;
+    activeTaskType = null;
+    setDisabledState();
+}
+
+function showLoanTask() {
+    loanRequired = true;
+    ps7FundingInterrupted = true;
+    if (ps7Card) ps7Card.hidden = true;
+    if (loanCard) loanCard.hidden = false;
+    setTaskMessage('FUNDING INTERRUPTED // LOAN REQUIRED');
+    if (loanStatus) loanStatus.textContent = 'ACTION REQUIRED // SIGN AUTHORIZATION';
+    resetTaskProgress();
+}
+
+function hideLoanTask() {
+    loanRequired = false;
+    if (loanCard) loanCard.hidden = true;
+    if (ps7Card) ps7Card.hidden = false;
+    setTaskMessage('LOAN APPROVED // PS7 PURCHASE RESTORED');
+}
+
+function cancelTaskUI() {
+    clearActiveTimer();
+    stopTaskAudio();
+
+    if (activeTaskType === 'cure') {
+        setCureProgress(0);
+        if (cureStatus) cureStatus.textContent = 'CANCELED // FUNDING CYCLE RESET';
+    } else if (activeTaskType === 'ps7') {
+        setPs7Progress(0);
+        if (ps7Status) ps7Status.textContent = 'CANCELED // PURCHASE RESET';
+        if (ps7Time) ps7Time.textContent = '15.0s';
+    } else if (activeTaskType === 'loan') {
+        if (loanStatus) loanStatus.textContent = 'CANCELED // SIGNATURE REQUIRED';
+    }
+
+    window.isTaskActive = false;
+    activeTaskType = null;
+    setTaskMessage('TASK CANCELED');
+    setDisabledState();
+}
+
+window.cancelCurrentTask = function() {
+    if (!window.isTaskActive) return;
+    cancelTaskUI();
 };
 
-// Cancel tasks if the player opens the camera monitor
+// Camera opening cancels active task, matching Night 1's behavior.
 if (btnCamera) {
-    btnCamera.addEventListener('click', () => {
-        window.cancelCurrentTask();
+    btnCamera.addEventListener('click', () => window.cancelCurrentTask());
+}
+
+// ============================================================
+// CURE TASK: 3 SECONDS EACH
+// ============================================================
+
+if (btnCure) {
+    btnCure.addEventListener('click', () => {
+        if (window.isBlackout || window.isTaskActive || cureCount >= MAX_CURE) return;
+
+        window.isTaskActive = true;
+        activeTaskType = 'cure';
+        setDisabledState();
+        setTaskMessage('VACCINE FUNDING IN PROGRESS');
+        if (cureStatus) cureStatus.textContent = 'FUNDING... // 3.0 SEC';
+        setCureProgress(0);
+        startTaskAudio();
+
+        const duration = 3000;
+        const started = performance.now();
+
+        function tick(now) {
+            if (!window.isTaskActive || activeTaskType !== 'cure') return;
+            if (window.isBlackout) {
+                window.cancelCurrentTask();
+                return;
+            }
+
+            const elapsed = now - started;
+            const percent = Math.min(100, (elapsed / duration) * 100);
+            setCureProgress(percent);
+
+            if (cureStatus) {
+                const seconds = Math.max(0, (duration - elapsed) / 1000);
+                cureStatus.textContent = `FUNDING... // ${seconds.toFixed(1)} SEC`;
+            }
+
+            if (elapsed >= duration) {
+                finishCure();
+                return;
+            }
+
+            activeTaskTimer = requestAnimationFrame(tick);
+        }
+
+        activeTaskTimer = requestAnimationFrame(tick);
     });
 }
 
-// --- Task 1: Fund Cure (5 Seconds) ---
-btnCure.addEventListener('click', () => {
-    if (window.isBlackout) return; 
-    if (window.isTaskActive || cureCount >= MAX_CURE) return;
-
-    window.isTaskActive = true;
-    activeTaskType = 'cure';
-    setTaskButtonsDisabled(true);
-    btnCure.style.color = "#ffaa00"; 
-    
-    startTaskAudio();
-
-    let timeLeft = 5;
-    btnCure.innerText = `Funding... (${timeLeft}s)`;
-
-    activeTaskTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-            btnCure.innerText = `Funding... (${timeLeft}s)`;
-        } else {
-            clearInterval(activeTaskTimer);
-            activeTaskTimer = null;
-            finishCure(); // Finishes task and stops audio
-        }
-    }, 1000);
-});
-
 function finishCure() {
     cureCount++;
-    window.isTaskActive = false;
-    activeTaskType = null;
-    
-    stopTaskAudio(); // Cuts off the 20s audio loop early
-    setTaskButtonsDisabled(false);
-    
-    btnCure.style.color = "#ccc"; 
-    btnCure.innerText = `Fund cure for Liberal virius (${cureCount}/${MAX_CURE})`;
-    
-    if (cureCount >= MAX_CURE) {
-        btnCure.style.color = "#00ff00";
-        btnCure.style.borderColor = "#00ff00";
-        btnCure.innerText = "Cure Funded";
-        btnCure.disabled = true;
+    finishActiveState();
+    setCureProgress(100);
+    updateCounts();
+
+    if (cureStatus) cureStatus.textContent = cureCount >= MAX_CURE
+        ? 'COMPLETE // VACCINE FUNDING SECURED'
+        : 'COMPLETE // NEXT FUNDING CYCLE READY';
+
+    if (cureCount >= MAX_CURE && btnCure) {
+        btnCure.textContent = 'VACCINE FUNDING COMPLETE';
+        btnCure.style.color = '#7dffbe';
+        btnCure.style.borderColor = '#7dffbe';
     }
-    
+
+    setTaskMessage(`VACCINE FUNDING ${cureCount}/${MAX_CURE}`);
     checkWinCondition();
 }
 
-// --- Task 2: Buy PS7 (15 Seconds) ---
-btnPs7.addEventListener('click', () => {
-    if (window.isBlackout) return;
-    if (window.isTaskActive || ps7Count >= MAX_PS7) return;
+// ============================================================
+// PS7 TASK: 15 SECONDS, FUNDING FAILS AT 7.5 SECONDS
+// ============================================================
 
-    window.isTaskActive = true;
-    activeTaskType = 'ps7';
-    setTaskButtonsDisabled(true);
-    btnPs7.style.color = "#ffaa00"; 
-    
-    startTaskAudio();
+if (btnPs7) {
+    btnPs7.addEventListener('click', () => {
+        if (window.isBlackout || window.isTaskActive || ps7Count >= MAX_PS7 || loanRequired) return;
 
-    let timeLeft = 15;
-    btnPs7.innerText = `Purchasing... (${timeLeft}s)`;
+        window.isTaskActive = true;
+        activeTaskType = 'ps7';
+        setDisabledState();
+        setTaskMessage('PS7 PROCUREMENT IN PROGRESS');
+        if (ps7Status) ps7Status.textContent = 'AUTHORIZING PURCHASE...';
+        if (ps7Time) ps7Time.textContent = '15.0s';
+        setPs7Progress(0);
+        startTaskAudio();
 
-    activeTaskTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-            btnPs7.innerText = `Purchasing... (${timeLeft}s)`;
-        } else {
-            clearInterval(activeTaskTimer);
-            activeTaskTimer = null;
-            finishPs7(); // Finishes task and stops audio
+        const duration = 15000;
+        const fundingFailureAt = 7500;
+        const started = performance.now();
+
+        function tick(now) {
+            if (!window.isTaskActive || activeTaskType !== 'ps7') return;
+            if (window.isBlackout) {
+                window.cancelCurrentTask();
+                return;
+            }
+
+            const elapsed = now - started;
+            const percent = Math.min(100, (elapsed / duration) * 100);
+            const secondsLeft = Math.max(0, (duration - elapsed) / 1000);
+
+            setPs7Progress(percent);
+            if (ps7Time) ps7Time.textContent = secondsLeft.toFixed(1) + 's';
+
+            if (elapsed >= fundingFailureAt && !ps7FundingInterrupted) {
+                interruptPs7ForFunds();
+                return;
+            }
+
+            if (ps7Status) ps7Status.textContent = 'AUTHORIZING PURCHASE...';
+
+            activeTaskTimer = requestAnimationFrame(tick);
         }
-    }, 1000);
-});
 
-function finishPs7() {
-    ps7Count++;
-    window.isTaskActive = false;
-    activeTaskType = null;
-    
-    stopTaskAudio(); // Cuts off the 20s audio loop early
-    setTaskButtonsDisabled(false);
-    
-    btnPs7.style.color = "#ccc";
-    btnPs7.innerText = `Buy the new PS7 (${ps7Count}/${MAX_PS7})`;
-    
-    if (ps7Count >= MAX_PS7) {
-        btnPs7.style.color = "#00ff00";
-        btnPs7.style.borderColor = "#00ff00";
-        btnPs7.innerText = "PS7 Purchased";
-        btnPs7.disabled = true;
-    }
-    
-    checkWinCondition();
+        activeTaskTimer = requestAnimationFrame(tick);
+    });
 }
 
+function interruptPs7ForFunds() {
+    clearActiveTimer();
+    stopTaskAudio();
+
+    window.isTaskActive = false;
+    activeTaskType = null;
+
+    setPs7Progress(50);
+    if (ps7Progress) ps7Progress.classList.add('warning');
+    if (ps7Status) ps7Status.textContent = 'INSUFFICIENT FUNDS';
+    if (ps7Time) ps7Time.textContent = 'FUNDING HALTED';
+
+    showLoanTask();
+    setDisabledState();
+}
+
+// ============================================================
+// LOAN TASK: SIGN THE PAPER
+// ============================================================
+
+if (btnLoan) {
+    btnLoan.addEventListener('click', () => {
+        if (window.isBlackout || window.isTaskActive || loanSigned || !loanRequired) return;
+
+        window.isTaskActive = true;
+        activeTaskType = 'loan';
+        setDisabledState();
+        setTaskMessage('EMERGENCY LOAN // SIGNATURE REQUIRED');
+        if (loanStatus) loanStatus.textContent = 'SIGNING... // VERIFYING AUTHORIZATION';
+        if (loanSignature) loanSignature.textContent = 'SIGNING...';
+        if (loanSignature) loanSignature.parentElement.classList.add('signed');
+        startTaskAudio();
+
+        // Signing is intentionally quick. The paperwork is the task, not another 15-second wait.
+        activeTaskTimer = setTimeout(() => {
+            if (window.isBlackout) {
+                window.cancelCurrentTask();
+                return;
+            }
+
+            loanSigned = true;
+            finishActiveState();
+
+            if (loanStatus) loanStatus.textContent = 'SIGNED // EMERGENCY CREDIT APPROVED';
+            if (loanSignature) loanSignature.textContent = 'AUTHORIZED';
+            setTaskMessage('LOAN APPROVED // RESTART PS7 PURCHASE');
+            hideLoanTask();
+            ps7FundingInterrupted = false;
+
+            if (btnPs7) {
+                btnPs7.textContent = 'PURCHASE PS7';
+                btnPs7.style.color = '#b8c2bc';
+                btnPs7.style.borderColor = '#3c4741';
+            }
+
+            setDisabledState();
+        }, 900);
+    });
+}
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+
+updateCounts();
+setCureProgress(0);
+setPs7Progress(0);
+setDisabledState();
 // --- End of Night Win Condition ---
 function checkWinCondition() {
     if (nightCompleted || window.isBlackout) return;
