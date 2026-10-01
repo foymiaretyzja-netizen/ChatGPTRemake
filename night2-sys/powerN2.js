@@ -4,7 +4,75 @@ const powerDisplay = document.getElementById('power-display');
 const panoramaBg = document.getElementById('office-panorama');
 let btnLights = null;
 
-(function upgradePowerConsole(){const panel=document.getElementById('right-panel');if(!panel)return;panel.innerHTML=`<div class="power-console"><div class="power-console-head"><div><div class="power-console-kicker">SYS-PWR / 02</div><div class="power-console-title">POWER & SENSOR ARRAY</div></div><div class="power-online"><i></i><span id="power-system-state">ONLINE</span></div></div><div class="power-main-readout"><div class="power-readout-label">RESERVE CAPACITY</div><div class="power-readout-row"><span id="power-console-percent">100%</span><span id="power-console-mode">STABLE</span></div><div class="power-bar"><div id="power-console-fill"></div><div class="power-bar-grid"></div></div><div class="power-readout-meta"><span id="power-console-drain">DRAW 0.33% / SEC</span><span id="power-console-runtime">ONLINE</span></div></div><div class="power-section-label">LIGHTING CONTROL</div><button id="btn-lights" class="power-light-btn" type="button"><span class="power-light-icon"></span><span class="power-light-copy"><b id="power-light-title">LIGHTING ON</b><small id="power-light-sub">NORMAL ILLUMINATION</small></span><span class="power-light-toggle"><i></i></span></button><div class="power-section-label">MOTION SENSOR</div><div class="sensor-console"><div class="sensor-topline"><span>DOOR ARRAY</span><span id="sensor-state">READY</span></div><div class="sensor-buttons"><button id="btn-sensor-left" class="sensor-btn" type="button"><span class="sensor-dot"></span>LEFT DOOR</button><button id="btn-sensor-right" class="sensor-btn" type="button"><span class="sensor-dot"></span>RIGHT DOOR</button></div><div class="sensor-result" id="sensor-display"><span class="sensor-pulse"></span><span>AWAITING SCAN</span></div></div><div class="power-footer"><span>BLACK HOUSE // POWER BUS</span><span id="power-load">LOAD: NORMAL</span></div></div>`;const style=document.createElement('style');style.textContent=`#power-display{display:none!important}#right-panel{width:390px!important;height:390px!important;max-height:min(390px,72vh)!important;padding:0!important;overflow:hidden!important;background:transparent!important;border:0!important;box-shadow:none!important}.power-console{width:100%;height:100%;padding:16px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3d4942 #090b0a;background:linear-gradient(155deg,rgba(15,19,17,.985),rgba(5,8,7,.99));border:1px solid #47534c;border-radius:14px 14px 0 0;box-shadow:0 -15px 40px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.045);color:#dfe8e2;font-family:"DM Mono","Courier New",monospace}.power-console::-webkit-scrollbar{width:7px}.power-console::-webkit-scrollbar-track{background:#090b0a}.power-console::-webkit-scrollbar-thumb{background:#3d4942}.power-console-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.power-console-kicker{font-size:8px;color:#65736b;letter-spacing:.18em;margin-bottom:4px}.power-console-title{font:700 13px "Courier New",monospace;letter-spacing:.035em;color:#e5ede8}.power-online{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid #365341;background:rgba(77,190,116,.045);color:#7dffbe;font-size:8px;letter-spacing:.09em}.power-online i{width:6px;height:6px;border-radius:50%;background:#7dffbe;box-shadow:0 0 8px #7dffbe}.power-main-readout{margin-top:12px;padding:11px;border:1px solid #2c3530;background:linear-gradient(180deg,rgba(16,22,19,.8),rgba(7,10,9,.8))}.power-readout-label,.power-section-label{font-size:8px;letter-spacing:.15em;color:#65736b}.power-readout-row{display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 7px}#power-console-percent{font:700 31px/1 "Courier New",monospace;color:#eff8f2;letter-spacing:-.04em}#power-console-mode{font-size:8px;color:#7dffbe;letter-spacing:.12em}.power-bar{height:16px;position:relative;overflow:hidden;background:#070a09;border:1px solid #29322d}#power-console-fill{height:100%;width:100%;background:linear-gradient(90deg,#477e5a,#8ee6ad);box-shadow:0 0 15px rgba(90,220,130,.18);transition:width .25s ease,background .25s ease}.power-bar-grid{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(255,255,255,.06) 18px 19px);pointer-events:none}.power-readout-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:7px;color:#59645e;letter-spacing:.07em}.power-section-label{margin:11px 0 6px}.power-light-btn{width:100%;display:flex;align-items:center;gap:9px;padding:9px;background:linear-gradient(180deg,#161d19,#0c110f);border:1px solid #7d641d;color:#ffcf5a;cursor:pointer;text-align:left;transition:.18s}.power-light-btn:hover{background:#1b241f;border-color:#b28d2c}.power-light-icon{width:25px;height:25px;border:1px solid currentColor;border-radius:6px;position:relative}.power-light-icon:before{content:"";position:absolute;width:8px;height:8px;border-radius:50%;left:7px;top:6px;background:currentColor;box-shadow:0 0 9px currentColor}.power-light-copy{flex:1;display:flex;flex-direction:column;gap:2px}.power-light-copy b{font:700 9px "DM Mono",monospace;letter-spacing:.08em}.power-light-copy small{font:7px "DM Mono",monospace;color:#68736d;letter-spacing:.06em}.power-light-toggle{width:30px;height:15px;border:1px solid #57635b;border-radius:9px;padding:2px}.power-light-toggle i{display:block;width:9px;height:9px;border-radius:50%;background:#ffcf5a;box-shadow:0 0 6px rgba(255,207,90,.6);transform:translateX(14px);transition:.2s}.sensor-console{border:1px solid #2c3530;background:rgba(7,10,9,.62);padding:9px}.sensor-topline{display:flex;justify-content:space-between;font-size:7px;letter-spacing:.1em;color:#65736b;margin-bottom:7px}.sensor-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.sensor-btn{padding:9px 7px;border:1px solid #354039;background:#101512;color:#b9c5be;font:700 8px "DM Mono",monospace;letter-spacing:.07em;cursor:pointer}.sensor-btn:hover{border-color:#718078;color:#eef6f1;background:#17201b}.sensor-btn:disabled{opacity:.45;cursor:not-allowed}.sensor-dot{display:inline-block;width:5px;height:5px;border:1px solid #77847c;border-radius:50%;margin-right:5px}.sensor-result{min-height:30px;margin-top:7px;border:1px solid #252e29;background:#080b0a;display:flex;align-items:center;gap:7px;padding:7px;color:#77837c;font-size:7px;letter-spacing:.08em}.sensor-pulse{width:6px;height:6px;border-radius:50%;background:#6d7771;box-shadow:0 0 7px rgba(130,150,140,.35)}.power-footer{display:flex;justify-content:space-between;margin-top:10px;color:#4e5a53;font-size:6px;letter-spacing:.08em}#right-panel.power-critical .power-console{border-color:#74403d}#right-panel.power-critical #power-console-percent,#right-panel.power-critical #power-console-mode{color:#ff6e6e}#right-panel.power-critical #power-console-fill{background:linear-gradient(90deg,#9c3d3d,#ff6767)}#right-panel.power-warning #power-console-percent,#right-panel.power-warning #power-console-mode{color:#ffcf5a}#right-panel.power-warning #power-console-fill{background:linear-gradient(90deg,#82651e,#e1b13f)}#right-panel.power-offline .power-console{border-color:#733b3b}.power-offline .power-online{color:#ff6666;border-color:#5d3434}.power-offline .power-online i{background:#ff5555;box-shadow:0 0 8px #ff5555}.power-offline .power-light-btn{opacity:.5;pointer-events:none}`;document.head.appendChild(style)})();btnLights=document.getElementById('btn-lights');
+// Restore the compact battery HUD in the top-left corner.
+powerDisplay.innerHTML = `
+    <div class="power-hud" aria-label="Power: 100%">
+        <svg class="power-battery" viewBox="0 0 52 28" aria-hidden="true">
+            <rect class="battery-shell" x="1.5" y="2" width="43" height="24" rx="5"></rect>
+            <rect class="battery-terminal" x="46" y="9" width="4.5" height="10" rx="2"></rect>
+            <rect class="battery-fill" x="5" y="5.5" width="35" height="17" rx="2.5"></rect>
+        </svg>
+        <span class="power-percent">100%</span>
+    </div>
+`;
+
+const powerHud = powerDisplay.querySelector('.power-hud');
+const batteryFill = powerDisplay.querySelector('.battery-fill');
+const powerPercent = powerDisplay.querySelector('.power-percent');
+
+const batteryStyle = document.createElement('style');
+batteryStyle.textContent = `
+    #power-display {
+        display: block !important;
+        position: absolute !important;
+        top: 18px !important;
+        left: 18px !important;
+        z-index: 1000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: #fff !important;
+        font-family: "DM Mono", "Courier New", monospace !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        text-shadow: none !important;
+        pointer-events: none;
+    }
+    .power-hud {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 106px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 10px;
+        background: rgba(5,7,9,0.78);
+        box-shadow: 0 5px 18px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.035);
+        backdrop-filter: blur(7px);
+        -webkit-backdrop-filter: blur(7px);
+    }
+    .power-battery {
+        width: 38px;
+        height: auto;
+        display: block;
+        flex: 0 0 auto;
+        filter: drop-shadow(0 0 5px rgba(125,255,190,0.18));
+    }
+    .battery-shell { fill: rgba(0,0,0,0.35); stroke: rgba(255,255,255,0.72); stroke-width: 2; }
+    .battery-terminal { fill: rgba(255,255,255,0.72); }
+    .battery-fill { fill: #7dffbe; transition: width 0.25s ease, fill 0.25s ease; }
+    .power-percent { min-width: 42px; color: #f3f7f5; letter-spacing: 0.02em; text-align: right; }
+    .power-hud.low { border-color: rgba(255,187,0,0.55); }
+    .power-hud.low .battery-fill { fill: #ffbb00; }
+    .power-hud.critical { border-color: rgba(255,55,55,0.7); animation: powerPulseN2 1s infinite; }
+    .power-hud.critical .battery-fill { fill: #ff3838; }
+    @keyframes powerPulseN2 {
+        0%,100% { box-shadow: 0 5px 18px rgba(0,0,0,0.45), 0 0 0 rgba(255,55,55,0); }
+        50% { box-shadow: 0 5px 18px rgba(0,0,0,0.45), 0 0 16px rgba(255,55,55,0.22); }
+    }
+`;
+document.head.appendChild(batteryStyle);
+
+(function upgradePowerConsole(){const panel=document.getElementById('right-panel');if(!panel)return;panel.innerHTML=`<div class="power-console"><div class="power-console-head"><div><div class="power-console-kicker">SYS-PWR / 02</div><div class="power-console-title">POWER & SENSOR ARRAY</div></div><div class="power-online"><i></i><span id="power-system-state">ONLINE</span></div></div><div class="power-main-readout"><div class="power-readout-label">RESERVE CAPACITY</div><div class="power-readout-row"><span id="power-console-percent">100%</span><span id="power-console-mode">STABLE</span></div><div class="power-bar"><div id="power-console-fill"></div><div class="power-bar-grid"></div></div><div class="power-readout-meta"><span id="power-console-drain">DRAW 0.33% / SEC</span><span id="power-console-runtime">ONLINE</span></div></div><div class="power-section-label">LIGHTING CONTROL</div><button id="btn-lights" class="power-light-btn" type="button"><span class="power-light-icon"></span><span class="power-light-copy"><b id="power-light-title">LIGHTING ON</b><small id="power-light-sub">NORMAL ILLUMINATION</small></span><span class="power-light-toggle"><i></i></span></button><div class="power-section-label">MOTION SENSOR</div><div class="sensor-console"><div class="sensor-topline"><span>DOOR ARRAY</span><span id="sensor-state">READY</span></div><div class="sensor-buttons"><button id="btn-sensor-left" class="sensor-btn" type="button"><span class="sensor-dot"></span>LEFT DOOR</button><button id="btn-sensor-right" class="sensor-btn" type="button"><span class="sensor-dot"></span>RIGHT DOOR</button></div><div class="sensor-result" id="sensor-display"><span class="sensor-pulse"></span><span>AWAITING SCAN</span></div></div><div class="power-footer"><span>BLACK HOUSE // POWER BUS</span><span id="power-load">LOAD: NORMAL</span></div></div>`;const style=document.createElement('style');style.textContent=`#power-display{display:block!important}#right-panel{width:390px!important;height:390px!important;max-height:min(390px,72vh)!important;padding:0!important;overflow:hidden!important;background:transparent!important;border:0!important;box-shadow:none!important}.power-console{width:100%;height:100%;padding:16px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3d4942 #090b0a;background:linear-gradient(155deg,rgba(15,19,17,.985),rgba(5,8,7,.99));border:1px solid #47534c;border-radius:14px 14px 0 0;box-shadow:0 -15px 40px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.045);color:#dfe8e2;font-family:"DM Mono","Courier New",monospace}.power-console::-webkit-scrollbar{width:7px}.power-console::-webkit-scrollbar-track{background:#090b0a}.power-console::-webkit-scrollbar-thumb{background:#3d4942}.power-console-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.power-console-kicker{font-size:8px;color:#65736b;letter-spacing:.18em;margin-bottom:4px}.power-console-title{font:700 13px "Courier New",monospace;letter-spacing:.035em;color:#e5ede8}.power-online{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid #365341;background:rgba(77,190,116,.045);color:#7dffbe;font-size:8px;letter-spacing:.09em}.power-online i{width:6px;height:6px;border-radius:50%;background:#7dffbe;box-shadow:0 0 8px #7dffbe}.power-main-readout{margin-top:12px;padding:11px;border:1px solid #2c3530;background:linear-gradient(180deg,rgba(16,22,19,.8),rgba(7,10,9,.8))}.power-readout-label,.power-section-label{font-size:8px;letter-spacing:.15em;color:#65736b}.power-readout-row{display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 7px}#power-console-percent{font:700 31px/1 "Courier New",monospace;color:#eff8f2;letter-spacing:-.04em}#power-console-mode{font-size:8px;color:#7dffbe;letter-spacing:.12em}.power-bar{height:16px;position:relative;overflow:hidden;background:#070a09;border:1px solid #29322d}#power-console-fill{height:100%;width:100%;background:linear-gradient(90deg,#477e5a,#8ee6ad);box-shadow:0 0 15px rgba(90,220,130,.18);transition:width .25s ease,background .25s ease}.power-bar-grid{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(255,255,255,.06) 18px 19px);pointer-events:none}.power-readout-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:7px;color:#59645e;letter-spacing:.07em}.power-section-label{margin:11px 0 6px}.power-light-btn{width:100%;display:flex;align-items:center;gap:9px;padding:9px;background:linear-gradient(180deg,#161d19,#0c110f);border:1px solid #7d641d;color:#ffcf5a;cursor:pointer;text-align:left;transition:.18s}.power-light-btn:hover{background:#1b241f;border-color:#b28d2c}.power-light-icon{width:25px;height:25px;border:1px solid currentColor;border-radius:6px;position:relative}.power-light-icon:before{content:"";position:absolute;width:8px;height:8px;border-radius:50%;left:7px;top:6px;background:currentColor;box-shadow:0 0 9px currentColor}.power-light-copy{flex:1;display:flex;flex-direction:column;gap:2px}.power-light-copy b{font:700 9px "DM Mono",monospace;letter-spacing:.08em}.power-light-copy small{font:7px "DM Mono",monospace;color:#68736d;letter-spacing:.06em}.power-light-toggle{width:30px;height:15px;border:1px solid #57635b;border-radius:9px;padding:2px}.power-light-toggle i{display:block;width:9px;height:9px;border-radius:50%;background:#ffcf5a;box-shadow:0 0 6px rgba(255,207,90,.6);transform:translateX(14px);transition:.2s}.sensor-console{border:1px solid #2c3530;background:rgba(7,10,9,.62);padding:9px}.sensor-topline{display:flex;justify-content:space-between;font-size:7px;letter-spacing:.1em;color:#65736b;margin-bottom:7px}.sensor-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.sensor-btn{padding:9px 7px;border:1px solid #354039;background:#101512;color:#b9c5be;font:700 8px "DM Mono",monospace;letter-spacing:.07em;cursor:pointer}.sensor-btn:hover{border-color:#718078;color:#eef6f1;background:#17201b}.sensor-btn:disabled{opacity:.45;cursor:not-allowed}.sensor-dot{display:inline-block;width:5px;height:5px;border:1px solid #77847c;border-radius:50%;margin-right:5px}.sensor-result{min-height:30px;margin-top:7px;border:1px solid #252e29;background:#080b0a;display:flex;align-items:center;gap:7px;padding:7px;color:#77837c;font-size:7px;letter-spacing:.08em}.sensor-pulse{width:6px;height:6px;border-radius:50%;background:#6d7771;box-shadow:0 0 7px rgba(130,150,140,.35)}.power-footer{display:flex;justify-content:space-between;margin-top:10px;color:#4e5a53;font-size:6px;letter-spacing:.08em}#right-panel.power-critical .power-console{border-color:#74403d}#right-panel.power-critical #power-console-percent,#right-panel.power-critical #power-console-mode{color:#ff6e6e}#right-panel.power-critical #power-console-fill{background:linear-gradient(90deg,#9c3d3d,#ff6767)}#right-panel.power-warning #power-console-percent,#right-panel.power-warning #power-console-mode{color:#ffcf5a}#right-panel.power-warning #power-console-fill{background:linear-gradient(90deg,#82651e,#e1b13f)}#right-panel.power-offline .power-console{border-color:#733b3b}.power-offline .power-online{color:#ff6666;border-color:#5d3434}.power-offline .power-online i{background:#ff5555;box-shadow:0 0 8px #ff5555}.power-offline .power-light-btn{opacity:.5;pointer-events:none}`;document.head.appendChild(style)})();btnLights=document.getElementById('btn-lights');
 
 // UI elements for the motion sensors
 const btnSensorLeft = document.getElementById('btn-sensor-left');
@@ -136,7 +204,44 @@ function scanDoor(side) {
 if (btnSensorLeft) btnSensorLeft.addEventListener('click', () => scanDoor('left'));
 if (btnSensorRight) btnSensorRight.addEventListener('click', () => scanDoor('right'));
 
-function updatePowerUI(){const percent=Math.max(0,Math.floor(power)),fill=document.getElementById('power-console-fill'),label=document.getElementById('power-console-percent'),mode=document.getElementById('power-console-mode'),drain=document.getElementById('power-console-drain'),runtime=document.getElementById('power-console-runtime'),load=document.getElementById('power-load'),panel=document.getElementById('right-panel');if(powerDisplay)powerDisplay.innerText=`Power: ${percent}%`;if(label)label.textContent=`${percent}%`;if(fill)fill.style.width=percent+'%';let state='STABLE',loadState='NORMAL';if(percent<=10){state='CRITICAL';loadState='CRITICAL';panel?.classList.add('power-critical');panel?.classList.remove('power-warning')}else if(percent<=25){state='LOW RESERVE';loadState='ELEVATED';panel?.classList.add('power-warning');panel?.classList.remove('power-critical')}else panel?.classList.remove('power-warning','power-critical');if(mode)mode.textContent=state;if(load)load.textContent=`LOAD: ${loadState}`;if(drain){let d=BASE_DRAIN;if(!lightsOn)d*=.5;if(window.leftDoorClosed)d+=.15;if(window.rightDoorClosed)d+=.15;if(window.isCameraOpen)d+=.10;drain.textContent=`DRAW ${d.toFixed(2)}% / SEC`}if(runtime)runtime.textContent=isBlackout?'OFFLINE':'ONLINE'}
+function updatePowerUI(){
+    const value=Math.max(0,Math.min(100,power));
+    const percent=Math.floor(value);
+    const fill=document.getElementById('power-console-fill');
+    const label=document.getElementById('power-console-percent');
+    const mode=document.getElementById('power-console-mode');
+    const drain=document.getElementById('power-console-drain');
+    const runtime=document.getElementById('power-console-runtime');
+    const load=document.getElementById('power-load');
+    const panel=document.getElementById('right-panel');
+
+    const batteryWidth=Math.max(0,35*(value/100));
+    if(batteryFill) batteryFill.setAttribute('width',batteryWidth.toFixed(2));
+    if(powerPercent) powerPercent.textContent=`${percent}%`;
+    if(powerHud){
+        powerHud.setAttribute('aria-label',`Power: ${percent}%`);
+        powerHud.classList.toggle('low',value<=25&&value>10);
+        powerHud.classList.toggle('critical',value<=10);
+    }
+
+    if(label)label.textContent=`${percent}%`;
+    if(fill)fill.style.width=percent+'%';
+    let state='STABLE',loadState='NORMAL';
+    if(percent<=10){state='CRITICAL';loadState='CRITICAL';panel?.classList.add('power-critical');panel?.classList.remove('power-warning')}
+    else if(percent<=25){state='LOW RESERVE';loadState='ELEVATED';panel?.classList.add('power-warning');panel?.classList.remove('power-critical')}
+    else panel?.classList.remove('power-warning','power-critical');
+    if(mode)mode.textContent=state;
+    if(load)load.textContent=`LOAD: ${loadState}`;
+    if(drain){
+        let d=BASE_DRAIN;
+        if(!lightsOn)d*=.5;
+        if(window.leftDoorClosed)d+=.15;
+        if(window.rightDoorClosed)d+=.15;
+        if(window.isCameraOpen)d+=.10;
+        drain.textContent=`DRAW ${d.toFixed(2)}% / SEC`;
+    }
+    if(runtime)runtime.textContent=isBlackout?'OFFLINE':'ONLINE';
+}
 
 // Main Power Drain Loop
 setInterval(() => {
@@ -186,8 +291,7 @@ function triggerBlackout() {
     }
     
     if (powerDisplay) {
-        powerDisplay.innerText = "Power: 0%";
-        powerDisplay.style.color = "#ff0000";
+        powerDisplay.style.color = "#fff";
     }
 
     if (sensorDisplay) {
