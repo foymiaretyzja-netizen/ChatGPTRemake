@@ -16,34 +16,6 @@
         }
 
 
-        // Start decoding every Night 2 visual immediately. This prevents the first
-        // camera/office view from waiting on a freshly requested image.
-        (function preloadNight2Assets() {
-            const night2Assets = [
-                '../Scenes/Presidential-room.jpg',
-                '../Scenes/Conference room.jpg',
-                '../Scenes/Diner.jpg',
-                '../Scenes/Janitor-room.jpg',
-                '../Scenes/Kitchen.jpg',
-                '../Scenes/Storage.jpg',
-                '../ScenesN2/guestroom-1.jpg',
-                '../ScenesN2/guestroom-2.jpg',
-                '../ScenesN2/guestroom-3.jpg',
-                '../ScenesN2/guestroom-4.jpg',
-                '../StoryScenes/Screenshot 2026-04-10 9.12.19 PM.png',
-                '../night2-sys/sprites/Charrlie.png',
-                '../night2-sys/sprites/Elong.png'
-            ];
-
-            window.night2AssetPreload = night2Assets.map(src => {
-                const img = new Image();
-                img.decoding = 'async';
-                img.src = src;
-                if (img.decode) img.decode().catch(() => {});
-                return img;
-            });
-        })();
-
         /* --- 1. The Panning Office Background --- */
         #office-panorama {
             position: absolute;
@@ -476,6 +448,33 @@
 
     <img id="charrlie-sprite-office" class="ai-sprite" src="../night2-sys/sprites/Charrlie.png">
     <img id="elong-sprite-office" class="ai-sprite" src="../night2-sys/sprites/Elong.png">
+
+    <script>
+        // Preload Night 2 visual assets as soon as the page starts.
+        (function preloadNight2Assets() {
+            const assets = [
+                '../Scenes/Presidential-room.jpg',
+                '../Scenes/Conference room.jpg',
+                '../Scenes/Diner.jpg',
+                '../Scenes/Janitor-room.jpg',
+                '../Scenes/Kitchen.jpg',
+                '../Scenes/Storage.jpg',
+                '../ScenesN2/guestroom-1.jpg',
+                '../ScenesN2/guestroom-2.jpg',
+                '../ScenesN2/guestroom-3.jpg',
+                '../ScenesN2/guestroom-4.jpg',
+                '../StoryScenes/Screenshot 2026-04-10 9.12.19 PM.png',
+                '../night2-sys/sprites/Charrlie.png',
+                '../night2-sys/sprites/Elong.png'
+            ];
+            window.night2AssetPreload = assets.map(src => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = src;
+                return img;
+            });
+        })();
+    </script>
 
     <script>
         const panorama = document.getElementById('office-panorama');
