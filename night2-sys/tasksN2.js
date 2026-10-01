@@ -62,7 +62,14 @@ let nightCompleted = false;
         .n2-task-panel {
             width: 390px !important;
             height: 390px !important;
+            max-height: min(390px, 72vh) !important;
             padding: 15px !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-gutter: stable;
             background:
                 linear-gradient(180deg, rgba(12,15,14,.98), rgba(6,8,8,.98)),
                 #080a09 !important;
@@ -82,7 +89,12 @@ let nightCompleted = false;
             transform: translateY(0) !important;
         }
 
-        .n2-task-panel::-webkit-scrollbar { width: 6px; }
+        .n2-task-panel {
+            touch-action: pan-y;
+            overscroll-behavior-y: contain;
+        }
+
+        .n2-task-panel::-webkit-scrollbar { width: 8px; }
         .n2-task-panel::-webkit-scrollbar-track { background: #090b0a; }
         .n2-task-panel::-webkit-scrollbar-thumb { background: #3a443f; }
 
@@ -317,6 +329,8 @@ let nightCompleted = false;
 
         .loan-paper {
             position: relative;
+            flex: 0 0 auto;
+            user-select: none;
             height: 46px;
             margin: 7px 0;
             overflow: hidden;
@@ -358,6 +372,7 @@ let nightCompleted = false;
 
         .n2-task-footer {
             display: flex;
+            flex: 0 0 auto;
             justify-content: space-between;
             gap: 8px;
             color: #505a54;
@@ -468,6 +483,22 @@ window.cancelCurrentTask = function() {
     if (!window.isTaskActive) return;
     cancelTaskUI();
 };
+
+// The paper itself is clickable, not just the button below it.
+const loanPaper = document.querySelector('.loan-paper');
+if (loanPaper) {
+    loanPaper.setAttribute('role', 'button');
+    loanPaper.setAttribute('tabindex', '0');
+    loanPaper.addEventListener('click', () => {
+        if (btnLoan && !btnLoan.disabled) btnLoan.click();
+    });
+    loanPaper.addEventListener('keydown', (event) => {
+        if ((event.key === 'Enter' || event.key === ' ') && btnLoan && !btnLoan.disabled) {
+            event.preventDefault();
+            btnLoan.click();
+        }
+    });
+}
 
 // Camera opening cancels active task, matching Night 1's behavior.
 if (btnCamera) {
