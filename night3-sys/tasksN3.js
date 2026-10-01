@@ -128,7 +128,6 @@ if (btnCamera) {
 if (btnRepairLights) {
     btnRepairLights.innerText = `Repair Lights (${lightsCount}/${MAX_LIGHTS})`;
     btnRepairLights.addEventListener('click', () => {
-        if (typeof isBlackout !== 'undefined' && isBlackout) return; 
         if (window.isTaskActive || lightsCount >= MAX_LIGHTS) return;
 
         window.isTaskActive = true;
@@ -220,6 +219,7 @@ function checkLightsWin(sliders) {
             window.cancelCurrentTask(); 
             
             if (lightsCount >= MAX_LIGHTS) {
+                if (typeof window.restoreLights === 'function') window.restoreLights();
                 btnRepairLights.style.color = "#00ff00";
                 btnRepairLights.style.borderColor = "#00ff00";
                 btnRepairLights.innerText = "Lights Repaired";
