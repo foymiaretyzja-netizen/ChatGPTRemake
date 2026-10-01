@@ -24,17 +24,30 @@ if (!zuckOfficeSprite) {
 // --- AI State Variables ---
 let zuckTimer = null;
 let zuckActive = false;
+let zuckAttackId = 0;
+let zuckInOffice = false;
 
 window.aiPositions = window.aiPositions || {};
 window.aiPositions.zuckenburger = 'Janitor Room';
+window.aiPositions.zuck = 'Janitor Room';
 
 // 1. Starts the AI. Waits exactly 35 seconds, then attacks immediately.
+function clearZuckTimer() {
+    if (zuckTimer) {
+        clearTimeout(zuckTimer);
+        zuckTimer = null;
+    }
+}
+
 function initZuckenBurger() {
     console.log("[ZuckenBurger AI] Initialized. Grace period active. First attack in 35 seconds...");
-    setTimeout(() => {
+    clearZuckTimer();
+    const attackId = ++zuckAttackId;
+    zuckTimer = setTimeout(() => {
+        if (attackId !== zuckAttackId || window.isBlackout) return;
         zuckActive = true;
-        enterOffice(); 
-    }, 35000); 
+        enterOffice();
+    }, 35000);
 }
 
 // 2. Randomizes the next attack between 15s and 24s (for subsequent loops)
@@ -45,17 +58,22 @@ function scheduleZuckAttack() {
     const nextAttackTime = Math.floor(Math.random() * 10000) + 15000; 
     console.log(`[ZuckenBurger AI] Next attack in ${nextAttackTime / 1000} seconds.`);
 
+    clearZuckTimer();
+    const attackId = ++zuckAttackId;
     zuckTimer = setTimeout(() => {
+        if (attackId !== zuckAttackId || window.isBlackout || !zuckActive) return;
         enterOffice();
     }, nextAttackTime);
 }
 
 // 3. ZuckenBurger bypasses doors and enters the office
 function enterOffice() {
-    if (window.isBlackout) return;
+    if (window.isBlackout || !zuckActive || zuckInOffice) return;
+    zuckInOffice = true;
 
     console.log("[ZuckenBurger AI] ZuckenBurger has entered the office! TURN OFF THE LIGHTS!");
     window.aiPositions.zuckenburger = 'Office';
+    window.aiPositions.zuck = 'Office';
     
     // Update Cameras if looking at Janitor Room
     if (typeof window.refreshCameraUI === 'function') window.refreshCameraUI();
@@ -73,13 +91,20 @@ function enterOffice() {
     zuckOfficeSprite.style.display = 'block';
 
     // Player has exactly 6 seconds to react
+    clearZuckTimer();
+    const attackId = zuckAttackId;
     zuckTimer = setTimeout(() => {
+        if (attackId !== zuckAttackId || window.isBlackout || !zuckInOffice) return;
         checkZuckSurvival();
     }, 6000);
 }
 
 // 4. Evaluate if the player turned off the lights in time
 function checkZuckSurvival() {
+    if (window.isBlackout || !zuckInOffice) {
+        if (window.isBlackout) leaveOffice();
+        return;
+    }
     // If the power went out, the lights are technically off, which saves the player
     if (window.isOfficeDark || window.isBlackout) {
         console.log("[ZuckenBurger AI] The room is dark. ZuckenBurger leaves.");
@@ -92,6 +117,8 @@ function checkZuckSurvival() {
 
 // 5. ZuckenBurger resets to the Janitor Room
 function leaveOffice() {
+    clearZuckTimer();
+    zuckInOffice = false;
     zuckOfficeSprite.style.display = 'none';
     window.aiPositions.zuckenburger = 'Janitor Room';
     
@@ -106,6 +133,10 @@ function leaveOffice() {
 
 // 6. The game over sequence
 function triggerZuckJumpscare() {
+    if (!zuckInOffice || window.isBlackout) return;
+    clearZuckTimer();
+    zuckActive = false;
+    zuckAttackId++;
     // Hide UI elements to focus on the scare
     const mon = document.getElementById('camera-monitor');
     if (mon) mon.style.display = 'none';
