@@ -1288,43 +1288,186 @@ function triggerWin() {
     if (window.finalFadeStarted) return;
     window.finalFadeStarted = true;
 
-    const fadeOutDiv = document.createElement('div');
+    // Lock the game behind the ending sequence.
+    document.body.style.cursor = 'none';
 
-    fadeOutDiv.style.position = 'fixed';
-    fadeOutDiv.style.top = '0';
-    fadeOutDiv.style.left = '0';
-    fadeOutDiv.style.width = '100vw';
-    fadeOutDiv.style.height = '100vh';
-    fadeOutDiv.style.backgroundColor = '#000';
-    fadeOutDiv.style.opacity = '0';
-    fadeOutDiv.style.zIndex = '9999';
-    fadeOutDiv.style.transition = 'opacity 3s ease-in-out';
-    fadeOutDiv.style.pointerEvents = 'all';
+    const endScreen = document.createElement('div');
+    endScreen.id = 'night-end-screen';
+    endScreen.innerHTML = `
+        <div class="night-end-scanlines"></div>
+        <div class="night-end-vignette"></div>
+        <div class="night-end-dawn"></div>
 
-    document.body.appendChild(fadeOutDiv);
+        <div class="night-end-content">
+            <div class="night-end-status">NIGHT 1 // COMPLETE</div>
+            <div class="night-end-time">6:00 AM</div>
+            <div class="night-end-rule"></div>
+            <div class="night-end-subtitle">THE HOUSE HAS GONE QUIET.</div>
+            <div class="night-end-location">BLACK HOUSE SECURITY SYSTEM</div>
+        </div>
+    `;
 
-    const winText = document.createElement('div');
+    const style = document.createElement('style');
+    style.id = 'night-end-style';
+    style.textContent = `
+        #night-end-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            overflow: hidden;
+            background: #000;
+            opacity: 0;
+            pointer-events: all;
+            font-family: "Courier New", Courier, monospace;
+            transition: opacity 2.8s cubic-bezier(.2,.7,.2,1);
+        }
 
-    winText.innerText = '6:00 AM';
-    winText.style.position = 'fixed';
-    winText.style.top = '50%';
-    winText.style.left = '50%';
-    winText.style.transform = 'translate(-50%, -50%)';
-    winText.style.color = '#fff';
-    winText.style.fontFamily = "'Courier New', Courier, monospace";
-    winText.style.fontSize = '4rem';
-    winText.style.fontWeight = 'bold';
-    winText.style.zIndex = '10000';
-    winText.style.opacity = '0';
-    winText.style.transition = 'opacity 3s ease-in-out 1.5s';
+        #night-end-screen.is-visible {
+            opacity: 1;
+        }
 
-    document.body.appendChild(winText);
+        .night-end-dawn {
+            position: absolute;
+            inset: -20%;
+            opacity: 0;
+            background:
+                radial-gradient(
+                    ellipse at 50% 48%,
+                    rgba(125, 145, 160, .18) 0%,
+                    rgba(55, 70, 80, .08) 27%,
+                    transparent 60%
+                );
+            transform: scale(.96);
+            transition: opacity 4s ease, transform 6s cubic-bezier(.2,.7,.2,1);
+        }
+
+        #night-end-screen.is-visible .night-end-dawn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .night-end-vignette {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    transparent 22%,
+                    rgba(0,0,0,.25) 58%,
+                    rgba(0,0,0,.88) 100%
+                );
+            pointer-events: none;
+        }
+
+        .night-end-scanlines {
+            position: absolute;
+            inset: 0;
+            opacity: .14;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(255,255,255,.035) 0px,
+                    rgba(255,255,255,.035) 1px,
+                    transparent 1px,
+                    transparent 5px
+                );
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .night-end-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(760px, calc(100vw - 40px));
+            transform: translate(-50%, -46%);
+            text-align: center;
+            opacity: 0;
+            filter: blur(7px);
+            transition:
+                opacity 2.2s ease 1.15s,
+                filter 2.2s ease 1.15s,
+                transform 2.2s cubic-bezier(.2,.8,.2,1) 1.15s;
+        }
+
+        #night-end-screen.is-visible .night-end-content {
+            opacity: 1;
+            filter: blur(0);
+            transform: translate(-50%, -50%);
+        }
+
+        .night-end-status {
+            color: #87939a;
+            font-size: clamp(9px, 1vw, 12px);
+            font-weight: bold;
+            letter-spacing: .34em;
+            margin-bottom: 22px;
+            opacity: .8;
+        }
+
+        .night-end-time {
+            color: #f1f5f6;
+            font-size: clamp(4rem, 10vw, 8rem);
+            line-height: .9;
+            font-weight: bold;
+            letter-spacing: .035em;
+            text-shadow:
+                0 0 8px rgba(220,235,242,.22),
+                0 0 35px rgba(130,155,170,.13);
+        }
+
+        .night-end-rule {
+            width: min(300px, 55vw);
+            height: 1px;
+            margin: 28px auto 20px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(190,205,212,.65),
+                transparent
+            );
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 1.4s cubic-bezier(.2,.8,.2,1) 2.05s;
+        }
+
+        #night-end-screen.is-visible .night-end-rule {
+            transform: scaleX(1);
+        }
+
+        .night-end-subtitle {
+            color: #c2cbd0;
+            font-size: clamp(10px, 1.2vw, 14px);
+            letter-spacing: .19em;
+            margin-bottom: 13px;
+            opacity: .9;
+        }
+
+        .night-end-location {
+            color: #59646a;
+            font-size: clamp(8px, .9vw, 10px);
+            letter-spacing: .14em;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #night-end-screen,
+            .night-end-dawn,
+            .night-end-content,
+            .night-end-rule {
+                transition: none !important;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(endScreen);
 
     const clockChime =
         new Audio('../Sounds/li-bing-tower-clock-chimewestminster-187254.mp3');
     const confettiCheer =
         new Audio('../Sounds/u_jspnqv1glx-1gift-confetti-447240.mp3');
 
+    // Save Night 1 completion before the visual sequence finishes.
     if (typeof window.completeNight === 'function') {
         window.completeNight(1);
     } else {
@@ -1333,18 +1476,23 @@ function triggerWin() {
         );
     }
 
-    setTimeout(() => {
-        fadeOutDiv.style.opacity = '1';
-        clockChime.play().catch(e => console.log('Audio block:', e));
-    }, 100);
+    // First, let the office disappear into darkness.
+    requestAnimationFrame(() => {
+        endScreen.classList.add('is-visible');
+    });
 
     setTimeout(() => {
-        winText.style.opacity = '1';
-        confettiCheer.play().catch(e => console.log('Audio block:', e));
+        clockChime.play().catch(e => console.log("Audio block:", e));
+    }, 450);
+
+    // The celebration arrives after the time display has settled in.
+    setTimeout(() => {
+        confettiCheer.play().catch(e => console.log("Audio block:", e));
         launchConfetti();
+    }, 3600);
 
-        setTimeout(() => {
-            window.location.href = '../title.html';
-        }, 15000);
-    }, 2000);
+    // Give the player time to actually read the ending.
+    setTimeout(() => {
+        window.location.href = '../title.html';
+    }, 15000);
 }
