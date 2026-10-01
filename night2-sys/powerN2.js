@@ -172,6 +172,7 @@ function triggerBlackout() {
     window.isBlackout = true;
     clearTimeout(lightTransitionTimer);
     if (typeof window.cancelCurrentTask === 'function') window.cancelCurrentTask();
+    if (typeof window.applyCharrlieDashStatic === 'function') window.applyCharrlieDashStatic(false);
     lightsOn = false;
     
     lightHumSound.pause();
