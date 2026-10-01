@@ -7,7 +7,8 @@ const charrlieRunSound = new Audio('../Sounds/freesound_community-foley_footstep
 // --- AI State Variables ---
 window.charrlieStage = 1; 
 let charrlieState = 'waiting'; // 'waiting', 'progressing', 'dashing', 'bounced'
-let charrlieTimer;
+let charrlieTimer = null;
+let charrlieRunId = 0;
 let charrlieTargetDoor = null;
 
 // Initialize global position so the motion scanners can see him
@@ -15,9 +16,19 @@ window.aiPositions = window.aiPositions || {};
 window.aiPositions.charrlie = 'Guest Room';
 
 // Starts the AI after the initial 35-second delay
+function clearCharrlieTimer() {
+    if (charrlieTimer) {
+        clearTimeout(charrlieTimer);
+        charrlieTimer = null;
+    }
+}
+
 function initCharrlie() {
     console.log("[Charrlie AI] Initialized. Waiting 35 seconds...");
+    clearCharrlieTimer();
+    const runId = ++charrlieRunId;
     charrlieTimer = setTimeout(() => {
+        if (runId !== charrlieRunId || window.isBlackout) return;
         charrlieState = 'progressing';
         scheduleNextCharrlieMove();
     }, 35000);
@@ -27,16 +38,19 @@ function initCharrlie() {
 function scheduleNextCharrlieMove() {
     if (window.isBlackout) return; // Stop if power is out
 
-    const nextMoveTime = Math.floor(Math.random() * 15000) + 20000; // 7s - 15s
+    const nextMoveTime = Math.floor(Math.random() * 8000) + 12000; // 12s - 20s
     
+    clearCharrlieTimer();
+    const runId = charrlieRunId;
     charrlieTimer = setTimeout(() => {
+        if (runId !== charrlieRunId || window.isBlackout) return;
         advanceCharrlieStage();
     }, nextMoveTime);
 }
 
 // Moves Charrlie to the next visual stage
 function advanceCharrlieStage() {
-    if (window.isBlackout) return;
+    if (window.isBlackout || charrlieState === 'dashing' || charrlieState === 'bounced') return;
 
     window.charrlieStage++; 
     console.log(`[Charrlie AI] Advanced to Stage ${window.charrlieStage}`);
@@ -78,7 +92,10 @@ function startCharrlieDash() {
     applyDashStatic(true);
 
     // Player has exactly 7 seconds to react (Maintained for task-balancing)
+    clearCharrlieTimer();
+    const runId = charrlieRunId;
     charrlieTimer = setTimeout(() => {
+        if (runId !== charrlieRunId || window.isBlackout) return;
         checkCharrlieAttack();
     }, 7000);
 }
@@ -110,7 +127,10 @@ function checkCharrlieAttack() {
             charrlieRunSound.play().catch(() => {});
             
             // Give them another 7 seconds for the new door
+            clearCharrlieTimer();
+            const runId = charrlieRunId;
             charrlieTimer = setTimeout(() => {
+                if (runId !== charrlieRunId || window.isBlackout) return;
                 checkCharrlieAttack();
             }, 7000);
             
@@ -124,6 +144,8 @@ function checkCharrlieAttack() {
 // Charrlie returns to his starting position
 function resetCharrlie() {
     console.log("[Charrlie AI] Attack failed. Resetting to Guest Room.");
+    clearCharrlieTimer();
+    charrlieRunId++;
     window.charrlieStage = 1; 
     charrlieState = 'progressing';
     window.aiPositions.charrlie = 'Guest Room';
@@ -141,6 +163,10 @@ function resetCharrlie() {
 
 // The game over sequence
 function triggerCharrlieJumpscare() {
+    if (window.isBlackout) return;
+    clearCharrlieTimer();
+    charrlieRunId++;
+    charrlieState = 'jumpscare';
     console.log("[Charrlie AI] JUMPSCARE!");
     applyDashStatic(false);
     
