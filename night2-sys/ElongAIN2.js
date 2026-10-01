@@ -72,6 +72,8 @@ function moveElong() {
         }
 
         setTimeout(() => {
+            if (window.isBlackout || !elongActive || elongAtDoor) return;
+
             elongCurrentRoom = nextRoom;
             window.aiPositions.elong = elongCurrentRoom;
             
