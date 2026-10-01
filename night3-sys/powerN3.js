@@ -164,9 +164,31 @@ if (btnSensorLeft) btnSensorLeft.addEventListener('click', () => scanDoor('left'
 if (btnSensorRight) btnSensorRight.addEventListener('click', () => scanDoor('right'));
 
 function updatePowerUI() {
-    if (powerDisplay) {
-        powerDisplay.innerText = `Power: ${Math.max(0, Math.floor(power))}%`;
+    if (!powerDisplay) return;
+
+    const pct = Math.max(0, Math.floor(power));
+    const status = isBlackout ? 'OFFLINE' : (pct <= 15 ? 'CRITICAL' : pct <= 30 ? 'LOW RESERVE' : 'ONLINE');
+    const value = powerDisplay.querySelector('.n3-power-value');
+    const fill = powerDisplay.querySelector('.n3-power-fill');
+    const state = powerDisplay.querySelector('.n3-power-status');
+    const draw = powerDisplay.querySelector('.n3-power-draw');
+    const lightState = powerDisplay.querySelector('.n3-light-state');
+    const motionState = powerDisplay.querySelector('.n3-motion-state');
+
+    if (value) value.textContent = pct + '%';
+    if (fill) fill.style.width = pct + '%';
+    if (state) state.textContent = status;
+    if (draw) {
+        const load = BASE_DRAIN
+            + (window.leftDoorClosed ? 0.15 : 0)
+            + (window.rightDoorClosed ? 0.15 : 0)
+            + (window.isCameraOpen ? 0.10 : 0);
+        draw.textContent = 'DRAW // ' + (isBlackout ? '0.00' : (load * (lightsOn ? 1 : 0.5)).toFixed(2)) + '% / SEC';
     }
+    if (lightState) lightState.textContent = isBlackout ? 'OFFLINE' : (lightsOn ? 'ONLINE' : 'STANDBY');
+    if (motionState) motionState.textContent = isBlackout ? 'OFFLINE' : 'READY';
+
+    powerDisplay.dataset.state = isBlackout ? 'offline' : (pct <= 15 ? 'critical' : pct <= 30 ? 'low' : 'online');
 }
 
 // Main Power Drain Loop
